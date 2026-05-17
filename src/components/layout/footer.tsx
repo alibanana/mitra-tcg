@@ -1,0 +1,105 @@
+import Link from "next/link"
+import Image from "next/image"
+import { siteConfig } from "@/config/site"
+import { ExternalLink } from "lucide-react"
+
+export function Footer() {
+  return (
+    <footer className="border-t border-border bg-background">
+      <div className="container mx-auto px-6 lg:px-12">
+        <div className="grid grid-cols-1 gap-12 py-14 md:grid-cols-12">
+          <div className="md:col-span-5">
+            <Link href="/" className="inline-flex items-center">
+              <Image
+                src="/logo-light.png"
+                alt={siteConfig.name}
+                width={1080}
+                height={1080}
+                className="h-16 w-auto dark:hidden"
+              />
+              <Image
+                src="/logo-dark.png"
+                alt={siteConfig.name}
+                width={1080}
+                height={1080}
+                className="hidden h-16 w-auto dark:block"
+              />
+            </Link>
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
+              {siteConfig.description}
+            </p>
+            <div className="mt-5 flex items-center gap-3">
+              <a
+                href={siteConfig.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs font-semibold transition-colors hover:border-foreground"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                @mitra.tcg
+              </a>
+              {siteConfig.whatsapp && (
+                <a
+                  href={siteConfig.whatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+                >
+                  WhatsApp
+                </a>
+              )}
+            </div>
+          </div>
+
+          <div className="md:col-span-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Navigation
+            </p>
+            <ul className="mt-4 space-y-3">
+              {siteConfig.nav.marketing.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {item.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="md:col-span-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Categories
+            </p>
+            <ul className="mt-4 space-y-3">
+              {[
+                { label: "One Piece Cards", href: "/products?category=ONE_PIECE" },
+                { label: "Pokémon Cards", href: "/products?category=POKEMON" },
+                { label: "Sealed Product", href: "/products?category=SEALED" },
+                { label: "Accessories", href: "/products?category=ACCESSORY" },
+              ].map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-start gap-2 border-t border-border py-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-muted-foreground">
+            &copy; {new Date().getFullYear()} {siteConfig.name}. All rights reserved.
+          </p>
+          <p className="text-xs text-muted-foreground">English Raw &amp; Graded · Indonesia</p>
+        </div>
+      </div>
+    </footer>
+  )
+}
