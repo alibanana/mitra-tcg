@@ -1,6 +1,7 @@
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { Sidebar } from "@/components/layout/sidebar";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { PsaImportWatcher } from "@/features/products/components/psa-import-watcher";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
@@ -61,6 +62,7 @@ export default async function DashboardLayout({
         </header>
         <main className="flex-1 overflow-auto p-6">{children}</main>
       </div>
+      <PsaImportWatcher />
     </div>
   );
 }

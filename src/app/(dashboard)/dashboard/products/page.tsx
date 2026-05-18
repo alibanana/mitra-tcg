@@ -2,15 +2,20 @@ export const dynamic = "force-dynamic"
 import Link from "next/link"
 import Image from "next/image"
 import { productsService } from "@/features/products/services"
+import { categoriesService } from "@/features/categories/services"
+import { AddProductModal } from "@/features/products/components/add-product-modal"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { Plus, Pencil } from "lucide-react"
+import { Pencil } from "lucide-react"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = { title: "Products" }
 
 export default async function ProductsPage() {
-  const { items: products, total } = await productsService.getAllProducts(1).catch(() => ({ items: [], total: 0 }))
+  const [{ items: products, total }, flatCategories] = await Promise.all([
+    productsService.getAllProducts(1).catch(() => ({ items: [], total: 0 })),
+    categoriesService.getFlatCategories().catch(() => []),
+  ])
 
   return (
     <div className="space-y-6">
@@ -19,13 +24,7 @@ export default async function ProductsPage() {
           <h1 className="text-2xl font-bold tracking-tight">Products</h1>
           <p className="mt-1 text-sm text-muted-foreground">{total} total products</p>
         </div>
-        <Link
-          href="/dashboard/products/new"
-          className={cn(buttonVariants(), "site-btn-primary gap-2")}
-        >
-          <Plus className="h-4 w-4" />
-          Add Product
-        </Link>
+        <AddProductModal flatCategories={flatCategories} />
       </div>
 
       <div className="overflow-x-auto border-2 border-foreground">

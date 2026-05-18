@@ -12,6 +12,7 @@ export const envSchema = z.object({
   GCS_PRIVATE_KEY: z.string().min(1),
   NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
   NEXT_PUBLIC_WHATSAPP_URL: z.string().optional(),
+  PSA_TOKEN: z.string().optional(),
 })
 
 export type Env = z.infer<typeof envSchema>

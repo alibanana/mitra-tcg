@@ -1,92 +1,138 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { usePathname } from "next/navigation"
-import { siteConfig } from "@/config/site"
-import { ThemeToggle } from "@/components/layout/theme-toggle"
-import { MobileHeaderNav } from "@/components/layout/mobile-header-nav"
-import { cn } from "@/lib/utils"
+import { MobileHeaderNav } from "@/components/layout/mobile-header-nav";
+import { NavProductsDropdown } from "@/components/layout/nav-products-dropdown";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { siteConfig } from "@/config/site";
+import type { CategoryWithChildren } from "@/features/categories/types";
+import { cn } from "@/lib/utils";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
-export function Header() {
-  const pathname = usePathname()
-  const isHome = pathname === "/"
-  const [atTop, setAtTop] = useState(true)
+interface HeaderProps {
+  categories?: CategoryWithChildren[];
+}
+
+export function Header({ categories = [] }: HeaderProps) {
+  const pathname = usePathname();
+  const [overHero, setOverHero] = useState(true);
+
+  // Only the home page has a hero section. Derive the initial state from the
+  // pathname so there is no DOM-timing race with client-component pages.
+  const isHomePage = pathname === "/";
 
   useEffect(() => {
-    if (!isHome) {
-      setAtTop(false)
-      return
+    if (!isHomePage) {
+      setOverHero(false);
+      return;
     }
-    const check = () => setAtTop(window.scrollY < 10)
-    check()
-    window.addEventListener("scroll", check, { passive: true })
-    return () => window.removeEventListener("scroll", check)
-  }, [isHome])
 
-  const transparent = isHome && atTop
+    const check = () => {
+      const hero = document.querySelector<HTMLElement>(".site-hero");
+      if (!hero) {
+        setOverHero(false);
+        return;
+      }
+      setOverHero(hero.getBoundingClientRect().bottom > 80);
+    };
+
+    check();
+    window.addEventListener("scroll", check, { passive: true });
+    return () => window.removeEventListener("scroll", check);
+  }, [isHomePage]);
 
   return (
-    <header
-      className="site-header sticky top-0 z-50 w-full transition-all duration-300"
-      style={transparent ? { background: "transparent", borderBottomColor: "transparent" } : undefined}
-    >
-      <div className="site-header-inner container mx-auto flex h-20 items-center justify-between px-6 lg:px-12">
+    <header className="site-header sticky top-0 z-50 w-full overflow-visible">
+      <div className="container mx-auto flex h-20 items-center justify-between overflow-visible pl-2 pr-6 lg:px-12">
+        {/* Logo — white version over hero, theme-aware once scrolled past */}
         <Link href="/" className="flex items-center">
-          {/* light mode / opaque header */}
           <Image
             src="/logo-light.png"
             alt={siteConfig.name}
             width={1080}
             height={1080}
-            className={cn("h-20 w-auto", transparent ? "hidden" : "dark:hidden")}
+            className={cn(
+              "h-16 w-auto mt-2 md:h-24 transition-opacity duration-300",
+              overHero ? "hidden" : "dark:hidden",
+            )}
             priority
           />
-          {/* dark mode OR transparent-over-image */}
           <Image
             src="/logo-dark.png"
             alt={siteConfig.name}
             width={1080}
             height={1080}
-            className={cn("h-20 w-auto", transparent ? "block" : "hidden dark:block")}
+            className={cn(
+              "h-16 w-auto mt-2 md:h-24 transition-opacity duration-300",
+              overHero ? "block" : "hidden dark:block",
+            )}
             priority
           />
         </Link>
 
-        <nav className="hidden items-center gap-8 md:flex">
-          {siteConfig.nav.marketing.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "text-base font-medium transition-colors",
-                transparent
-                  ? "text-white/90 hover:text-white"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {item.title}
-            </Link>
-          ))}
+        {/* Nav pill */}
+        <nav
+          className={cn(
+            "hidden md:flex items-center gap-1 rounded-full border px-2 py-1.5 backdrop-blur-md transition-all duration-500",
+            overHero
+              ? "border-white/20 bg-white/10"
+              : "border-border/25 bg-background/55",
+          )}
+        >
+          {siteConfig.nav.marketing.map((item) =>
+            item.href === "/products" ? (
+              <NavProductsDropdown
+                key={item.href}
+                categories={categories}
+                overHero={overHero}
+              />
+            ) : (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-300",
+                  overHero
+                    ? "text-white/85 hover:text-white hover:bg-white/15"
+                    : "text-foreground/85 hover:text-foreground hover:bg-foreground/8",
+                )}
+              >
+                {item.title}
+              </Link>
+            ),
+          )}
         </nav>
 
         <div className="flex items-center gap-3">
+          {/* Shop Now */}
           <Link
             href="/products"
             className={cn(
-              "hidden rounded-full px-4 py-2 text-sm font-semibold transition-all hover:opacity-90 md:inline-flex",
-              transparent
+              "hidden rounded-full px-4 py-2 text-sm font-semibold transition-all duration-500 md:inline-flex",
+              overHero
                 ? "border border-white/50 bg-white/15 text-white hover:bg-white/25"
-                : "bg-primary text-primary-foreground",
+                : "border border-foreground/25 text-foreground hover:bg-foreground/10",
             )}
           >
             Shop Now
           </Link>
-          <ThemeToggle className={transparent ? "text-white hover:bg-white/20" : ""} />
-          <MobileHeaderNav />
+          {/* Theme toggle — icon reflects actual theme, colour forced white over hero */}
+          <ThemeToggle
+            className={cn(
+              "transition-colors duration-300",
+              overHero && "text-white hover:bg-white/20",
+            )}
+          />
+          <MobileHeaderNav
+            categories={categories}
+            className={cn(
+              overHero && "border-white/50 text-white hover:bg-white/20",
+            )}
+          />
         </div>
       </div>
     </header>
-  )
+  );
 }

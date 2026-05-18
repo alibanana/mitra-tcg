@@ -2,8 +2,10 @@ import Link from "next/link"
 import Image from "next/image"
 import { siteConfig } from "@/config/site"
 import { ExternalLink } from "lucide-react"
+import { categoriesService } from "@/features/categories/services"
 
-export function Footer() {
+export async function Footer() {
+  const categories = await categoriesService.getCategoryTree()
   return (
     <footer className="border-t border-border bg-background">
       <div className="container mx-auto px-6 lg:px-12">
@@ -15,14 +17,14 @@ export function Footer() {
                 alt={siteConfig.name}
                 width={1080}
                 height={1080}
-                className="h-16 w-auto dark:hidden"
+                className="h-28 w-auto dark:hidden"
               />
               <Image
                 src="/logo-dark.png"
                 alt={siteConfig.name}
                 width={1080}
                 height={1080}
-                className="hidden h-16 w-auto dark:block"
+                className="hidden h-28 w-auto dark:block"
               />
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
@@ -69,28 +71,25 @@ export function Footer() {
             </ul>
           </div>
 
-          <div className="md:col-span-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Categories
-            </p>
-            <ul className="mt-4 space-y-3">
-              {[
-                { label: "One Piece Cards", href: "/products?category=ONE_PIECE" },
-                { label: "Pokémon Cards", href: "/products?category=POKEMON" },
-                { label: "Sealed Product", href: "/products?category=SEALED" },
-                { label: "Accessories", href: "/products?category=ACCESSORY" },
-              ].map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {categories.length > 0 && (
+            <div className="md:col-span-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Categories
+              </p>
+              <ul className="mt-4 space-y-3">
+                {categories.map((cat) => (
+                  <li key={cat.id}>
+                    <Link
+                      href={`/products?category=${cat.slug}`}
+                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {cat.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col items-start gap-2 border-t border-border py-6 sm:flex-row sm:items-center sm:justify-between">

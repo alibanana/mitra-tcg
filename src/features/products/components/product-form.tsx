@@ -144,13 +144,14 @@ export function ProductForm({ product, flatCategories }: ProductFormProps) {
             <Select
               defaultValue={product?.categoryId ?? flatCategories[0]?.id ?? ""}
               onValueChange={(v) => setValue("categoryId", v ?? "")}
+              itemToStringLabel={(v) => flatCategories.find((c) => c.id === v)?.name ?? ""}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
                 {flatCategories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
+                  <SelectItem key={cat.id} value={cat.id} label={cat.name}>
                     <span style={{ paddingLeft: cat.depth * 16 }}>
                       {" ".repeat(cat.depth * 2)}{cat.name}
                     </span>

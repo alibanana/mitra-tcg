@@ -2,8 +2,12 @@
 
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import { after } from "next/server"
+import { randomUUID } from "crypto"
 import { auth } from "@/lib/auth"
 import { slugify } from "@/lib/utils"
+import { uploadFromUrl, deleteFile } from "@/lib/upload"
+import { setJobStatus } from "@/lib/psa-job-store"
 import { productsService } from "./services"
 import { productSchema } from "./schemas"
 
@@ -72,9 +76,92 @@ export async function deleteProductAction(id: string) {
   const product = await productsService.getProductById(id)
   if (!product) return { error: "Product not found" }
 
+  await Promise.all(product.images.map((url) => deleteFile(url)))
   await productsService.deleteProduct(id)
 
   revalidatePath("/dashboard/products")
   revalidatePath("/products")
   redirect("/dashboard/products")
+}
+
+interface PSACert {
+  Year: string
+  Brand: string
+  CardNumber: string
+  Subject: string
+  Variety: string
+}
+
+interface PSAImage {
+  IsFrontImage: boolean
+  ImageURL: string
+}
+
+export async function importFromPSAAction(
+  certId: string,
+  categoryId: string,
+): Promise<{ error: string } | { success: true; jobId: string }> {
+  await requireAuth()
+
+  const token = process.env.PSA_TOKEN
+  if (!token) return { error: "PSA_TOKEN is not configured" }
+
+  const jobId = randomUUID()
+  setJobStatus(jobId, "pending")
+
+  after(async () => {
+    try {
+      const headers = { Authorization: `Bearer ${token}` }
+
+      const certRes = await fetch(
+        `https://api.psacard.com/publicapi/cert/GetByCertNumber/${certId}`,
+        { headers },
+      )
+      if (!certRes.ok) { setJobStatus(jobId, "failed"); return }
+
+      const certData = await certRes.json()
+      const cert: PSACert = certData.PSACert
+      if (!cert) { setJobStatus(jobId, "failed"); return }
+
+      const name = [cert.Year, cert.Brand, `#${cert.CardNumber}`, cert.Subject, cert.Variety]
+        .filter(Boolean).join(" ")
+
+      const imagesRes = await fetch(
+        `https://api.psacard.com/publicapi/cert/GetImagesByCertNumber/${certId}`,
+        { headers },
+      )
+      if (!imagesRes.ok) { setJobStatus(jobId, "failed"); return }
+
+      const imagesData: PSAImage[] = await imagesRes.json()
+      const sortedImages = [
+        ...imagesData.filter((img) => img.IsFrontImage),
+        ...imagesData.filter((img) => !img.IsFrontImage),
+      ]
+      if (sortedImages.length === 0) { setJobStatus(jobId, "failed"); return }
+
+      const uploadedUrls: string[] = []
+      for (const img of sortedImages) {
+        uploadedUrls.push(await uploadFromUrl(img.ImageURL))
+      }
+
+      await productsService.createProduct({
+        name,
+        slug: slugify(name),
+        description: "",
+        images: uploadedUrls,
+        categoryId,
+        featured: false,
+        published: false,
+        sold: false,
+      })
+
+      revalidatePath("/dashboard/products")
+      revalidatePath("/products")
+      setJobStatus(jobId, "done")
+    } catch {
+      setJobStatus(jobId, "failed")
+    }
+  })
+
+  return { success: true, jobId }
 }

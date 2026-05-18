@@ -245,10 +245,7 @@ body {
    ══════════════════════════════════════════════════════════════════════ */
 
 .site-header {
-  background: color-mix(in oklch, var(--background) 85%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
+  background: transparent;
 }
 
 .site-header-inner {
