@@ -2,9 +2,11 @@ import { siteConfig } from "@/config/site"
 import { settingsService } from "@/features/settings/services"
 import { ExternalLink } from "lucide-react"
 import { ContactForm } from "./contact-form"
+import { normalizeUrl } from "@/lib/utils"
 
 export default async function ContactPage() {
-  const whatsappUrl = await settingsService.getValue("whatsapp_url")
+  const rawWhatsappUrl = await settingsService.getValue("whatsapp_url")
+  const whatsappUrl = rawWhatsappUrl ? normalizeUrl(rawWhatsappUrl) : null
 
   return (
     <div className="border-b-4 border-foreground bg-background py-16">

@@ -4,12 +4,14 @@ import { siteConfig } from "@/config/site"
 import { ExternalLink } from "lucide-react"
 import { categoriesService } from "@/features/categories/services"
 import { settingsService } from "@/features/settings/services"
+import { normalizeUrl } from "@/lib/utils"
 
 export async function Footer() {
-  const [categories, whatsappUrl] = await Promise.all([
+  const [categories, rawWhatsappUrl] = await Promise.all([
     categoriesService.getCategoryTree(),
     settingsService.getValue("whatsapp_url"),
   ])
+  const whatsappUrl = rawWhatsappUrl ? normalizeUrl(rawWhatsappUrl) : null
   return (
     <footer className="border-t border-border bg-background">
       <div className="container mx-auto px-6 lg:px-12">

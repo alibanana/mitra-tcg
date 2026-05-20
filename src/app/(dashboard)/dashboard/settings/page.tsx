@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache"
 import { settingsService } from "@/features/settings/services"
 import { productsService } from "@/features/products/services"
 import { updateSettingsAction } from "@/features/settings/actions"
+import { normalizeUrl } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -51,7 +52,7 @@ export default async function SettingsPage() {
     const settingsArray = [
       { key: "site_title", value: formData.get("site_title") as string },
       { key: "site_description", value: formData.get("site_description") as string },
-      { key: "whatsapp_url", value: formData.get("whatsapp_url") as string },
+      { key: "whatsapp_url", value: normalizeUrl(formData.get("whatsapp_url") as string) },
       { key: "instagram_url", value: formData.get("instagram_url") as string },
     ]
     formData.set("settings", JSON.stringify(settingsArray))

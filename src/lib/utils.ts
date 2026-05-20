@@ -14,6 +14,12 @@ export function formatDate(date: Date | string): string {
   })
 }
 
+// Fixes single-slash protocol (https:/foo) → https://foo
+export function normalizeUrl(url: string): string {
+  if (!url) return url
+  return url.replace(/^(https?:)\/([^/])/, "$1//$2")
+}
+
 export function slugify(text: string): string {
   return text
     .normalize("NFD")
