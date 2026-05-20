@@ -26,6 +26,15 @@ export async function updateHeroImagesAction(urls: string[]) {
   return { success: true }
 }
 
+export async function updateInstagramPostsAction(postIds: string[]) {
+  const session = await auth()
+  if (!session?.user?.id) return { error: "Unauthorized" }
+
+  await settingsService.upsertSetting("instagram_post_ids", JSON.stringify(postIds))
+  revalidatePath("/", "layout")
+  return { success: true }
+}
+
 export async function updateSettingsAction(formData: FormData) {
   const session = await auth()
   if (!session?.user?.id) return { error: "Unauthorized" }

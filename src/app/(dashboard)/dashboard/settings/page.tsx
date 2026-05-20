@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { HeroImagesPicker } from "@/components/dashboard/hero-images-picker"
+import { InstagramPostsManager } from "@/components/dashboard/instagram-posts-manager"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = { title: "Settings" }
@@ -22,6 +23,14 @@ export default async function SettingsPage() {
     if (Array.isArray(parsed)) heroImages = parsed
   } catch {
     heroImages = []
+  }
+
+  let instagramPostIds: string[] = []
+  try {
+    const parsed = JSON.parse(s.instagram_post_ids ?? "[]")
+    if (Array.isArray(parsed)) instagramPostIds = parsed
+  } catch {
+    instagramPostIds = []
   }
 
   async function saveSettings(formData: FormData) {
@@ -106,6 +115,18 @@ export default async function SettingsPage() {
           <Button type="submit">Save Settings</Button>
         </div>
       </form>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Instagram Feed</CardTitle>
+          <CardDescription>
+            Posts shown in the &quot;From Our Instagram&quot; section on the homepage. Paste a post URL or short ID and click Add.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <InstagramPostsManager initialPostIds={instagramPostIds} />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

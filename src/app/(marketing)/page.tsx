@@ -3,6 +3,7 @@ import { Hero } from "@/components/marketing/hero"
 import { CategoryTiles } from "@/components/marketing/category-tiles"
 import { ProductPreview } from "@/components/marketing/product-preview"
 import { WhyMitra } from "@/components/marketing/why-mitra"
+import { InstagramFeed } from "@/components/marketing/instagram-feed"
 import { CtaSection } from "@/components/marketing/cta-section"
 import { categoriesService } from "@/features/categories/services"
 import { productsService } from "@/features/products/services"
@@ -42,6 +43,7 @@ export default async function HomePage() {
       <CategoryTiles categories={rootCategories} />
       <ProductPreview />
       <WhyMitra />
+      <InstagramFeed />
       <CtaSection />
     </>
   )
