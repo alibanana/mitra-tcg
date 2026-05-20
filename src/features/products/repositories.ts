@@ -23,6 +23,7 @@ function buildWhere(options: FindManyOptions): Prisma.ProductWhereInput {
 }
 
 const categoryInclude = { category: true } as const
+const fullInclude = { category: true, psaCert: true } as const
 
 export const productsRepository = {
   async findMany(options: FindManyOptions = {}) {
@@ -45,11 +46,11 @@ export const productsRepository = {
   },
 
   async findBySlug(slug: string) {
-    return prisma.product.findUnique({ where: { slug }, include: categoryInclude })
+    return prisma.product.findUnique({ where: { slug }, include: fullInclude })
   },
 
   async findById(id: string) {
-    return prisma.product.findUnique({ where: { id }, include: categoryInclude })
+    return prisma.product.findUnique({ where: { id }, include: fullInclude })
   },
 
   async create(data: ProductFormData) {

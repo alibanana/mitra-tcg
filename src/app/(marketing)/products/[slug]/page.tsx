@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils"
 import { siteConfig } from "@/config/site"
 import { settingsService } from "@/features/settings/services"
 import type { Metadata } from "next"
+import { PsaDataSection } from "@/components/products/psa-data-section"
 import type { Product } from "@/features/products/types"
 
 interface ProductDetailPageProps {
@@ -81,6 +82,10 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
               >
                 {product.sold ? "Sold Out" : "Inquire Now →"}
               </a>
+
+              {product.psaCert && (
+                <PsaDataSection psaCert={product.psaCert} />
+              )}
 
               {product.description && (
                 <div className="prose prose-sm max-w-none text-muted-foreground">

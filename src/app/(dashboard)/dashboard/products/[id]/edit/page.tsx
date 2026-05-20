@@ -3,8 +3,9 @@ import { notFound } from "next/navigation"
 import { productsService } from "@/features/products/services"
 import { categoriesService } from "@/features/categories/services"
 import { ProductForm } from "@/features/products/components/product-form"
+import { PsaAdminSection } from "@/features/products/components/psa-admin-section"
 import type { Metadata } from "next"
-import type { Product } from "@/features/products/types"
+import type { Product, PsaCert } from "@/features/products/types"
 
 export const metadata: Metadata = { title: "Edit Product" }
 
@@ -24,6 +25,9 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
         <p className="mt-1 text-sm text-muted-foreground">Update the details for &ldquo;{product.name}&rdquo;</p>
       </div>
       <ProductForm product={product as Product} flatCategories={flatCategories} />
+      {product.psaCert && (
+        <PsaAdminSection psaCert={product.psaCert as PsaCert} />
+      )}
     </div>
   )
 }

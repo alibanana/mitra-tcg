@@ -90,8 +90,39 @@ model Product {
   published   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  psaCert     PsaCert?
 
   @@map("products")
+}
+
+model PsaCert {
+  id                           String   @id @default(uuid())
+  productId                    String   @unique
+  product                      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  certNumber                   String   @unique
+  specId                       Int
+  specNumber                   String
+  labelType                    String?
+  reverseBarCode               Boolean  @default(false)
+  year                         String?
+  brand                        String?
+  psaCategory                  String?  @map("category")
+  cardNumber                   String?
+  subject                      String?
+  variety                      String?
+  gradeDescription             String?
+  cardGrade                    String?
+  totalPopulation              Int      @default(0)
+  totalPopulationWithQualifier Int      @default(0)
+  populationHigher             Int      @default(0)
+  isPsaDna                     Boolean  @default(false)
+  isDualCert                   Boolean  @default(false)
+  psaPopulation                Json?    @map("psa_population")
+  psaPopPopulatedAt            DateTime? @map("psa_pop_populated_at")
+  createdAt                    DateTime @default(now())
+  updatedAt                    DateTime @updatedAt
+
+  @@map("psa_certs")
 }
 
 model ContactSubmission {
