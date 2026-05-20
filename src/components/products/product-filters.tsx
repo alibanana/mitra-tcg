@@ -49,7 +49,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
       <Input
-        placeholder="Search cards..."
+        placeholder="Search products..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="sm:max-w-[240px]"

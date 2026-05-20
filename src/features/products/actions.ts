@@ -27,7 +27,6 @@ export async function createProductAction(formData: FormData) {
     ...raw,
     slug: raw.slug || slugify(String(raw.name ?? "")),
     images,
-    featured: raw.featured === "true",
     published: raw.published === "true",
     sold: raw.sold === "true",
   })
@@ -52,7 +51,6 @@ export async function updateProductAction(id: string, formData: FormData) {
   const parsed = productSchema.safeParse({
     ...raw,
     images,
-    featured: raw.featured === "true",
     published: raw.published === "true",
     sold: raw.sold === "true",
   })
@@ -150,7 +148,6 @@ export async function importFromPSAAction(
         description: "",
         images: uploadedUrls,
         categoryId,
-        featured: false,
         published: false,
         sold: false,
       })

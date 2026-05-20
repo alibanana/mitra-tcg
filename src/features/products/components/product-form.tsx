@@ -67,7 +67,6 @@ export function ProductForm({ product, flatCategories }: ProductFormProps) {
       images: product?.images ?? [],
       categoryId: product?.categoryId ?? flatCategories[0]?.id ?? "",
       sold: product?.sold ?? false,
-      featured: product?.featured ?? false,
       published: product?.published ?? false,
     },
   })
@@ -165,14 +164,6 @@ export function ProductForm({ product, flatCategories }: ProductFormProps) {
           </div>
 
           <div className="space-y-3 border-t border-foreground/10 pt-3">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="featured">Featured</Label>
-              <Switch
-                id="featured"
-                defaultChecked={product?.featured ?? false}
-                onCheckedChange={(v) => setValue("featured", v)}
-              />
-            </div>
             <div className="flex items-center justify-between">
               <Label htmlFor="published">Published</Label>
               <Switch

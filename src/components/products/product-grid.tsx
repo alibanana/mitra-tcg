@@ -64,11 +64,11 @@ export function ProductGrid({ initialProducts, initialHasMore, filters }: Produc
         {isPending && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-border border-t-foreground" />
-            Loading more cards…
+            Loading more products…
           </div>
         )}
         {!hasMore && products.length > 0 && (
-          <p className="text-xs text-muted-foreground">All {products.length} cards loaded</p>
+          <p className="text-xs text-muted-foreground">All {products.length} products loaded</p>
         )}
       </div>
     </>

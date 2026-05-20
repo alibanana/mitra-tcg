@@ -9,7 +9,6 @@ export interface Product {
   categoryId: string
   category: import("@/features/categories/types").Category
   sold: boolean
-  featured: boolean
   published: boolean
   createdAt: Date
   updatedAt: Date

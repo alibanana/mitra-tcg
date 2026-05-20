@@ -17,7 +17,6 @@ interface Column {
   key: string
   render?:
     | "published"
-    | "featured"
     | "read"
     | "editLink"
     | "technologies"
@@ -54,12 +53,6 @@ function CellContent({ col, row }: { col: Column; row: Record<string, unknown> }
           className={value ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-400" : ""}
         >
           {value ? "Published" : "Draft"}
-        </Badge>
-      )
-    case "featured":
-      return (
-        <Badge variant={value ? "default" : "secondary"}>
-          {value ? "Featured" : "Regular"}
         </Badge>
       )
     case "read":

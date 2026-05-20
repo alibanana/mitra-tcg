@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic"
 import { revalidatePath } from "next/cache"
 import { settingsService } from "@/features/settings/services"
+import { productsService } from "@/features/products/services"
 import { updateSettingsAction } from "@/features/settings/actions"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -8,14 +9,18 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { HeroImagesPicker } from "@/components/dashboard/hero-images-picker"
+import { HeroCardsPicker } from "@/components/dashboard/hero-cards-picker"
 import { InstagramPostsManager } from "@/components/dashboard/instagram-posts-manager"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = { title: "Settings" }
 
 export default async function SettingsPage() {
-  const settings = await settingsService.getAll().catch(() => [])
-  const s = Object.fromEntries(settings.map((setting) => [setting.key, setting.value]))
+  const [settings, allProductImages] = await Promise.all([
+    settingsService.getAll().catch(() => []),
+    productsService.getAllProductImages().catch(() => []),
+  ])
+  const s = Object.fromEntries(settings.map((setting: { key: string; value: string }) => [setting.key, setting.value]))
 
   let heroImages: string[] = []
   try {
@@ -23,6 +28,14 @@ export default async function SettingsPage() {
     if (Array.isArray(parsed)) heroImages = parsed
   } catch {
     heroImages = []
+  }
+
+  let heroCardImages: string[] = []
+  try {
+    const parsed = JSON.parse(s.hero_card_images ?? "[]")
+    if (Array.isArray(parsed)) heroCardImages = parsed
+  } catch {
+    heroCardImages = []
   }
 
   let instagramPostIds: string[] = []
@@ -137,6 +150,18 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent>
           <HeroImagesPicker initialImages={heroImages} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Hero Cards</CardTitle>
+          <CardDescription>
+            Up to 3 card images displayed as the floating card fan on the hero section. Changes save automatically.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <HeroCardsPicker initialSelected={heroCardImages} availableImages={allProductImages} />
         </CardContent>
       </Card>
     </div>

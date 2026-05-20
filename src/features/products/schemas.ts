@@ -7,7 +7,6 @@ export const productSchema = z.object({
   images: z.array(z.string().url()).min(2, "At least 2 images are required"),
   categoryId: z.string().min(1, "Category is required"),
   sold: z.boolean().default(false),
-  featured: z.boolean().default(false),
   published: z.boolean().default(false),
 })
 

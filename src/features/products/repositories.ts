@@ -8,7 +8,6 @@ export interface FindManyOptions {
   categoryIds?: string[]
   search?: string
   published?: boolean
-  featured?: boolean
   sold?: boolean
   page?: number
   limit?: number
@@ -18,7 +17,6 @@ function buildWhere(options: FindManyOptions): Prisma.ProductWhereInput {
   const where: Prisma.ProductWhereInput = {}
   if (options.categoryIds?.length) where.categoryId = { in: options.categoryIds }
   if (options.published !== undefined) where.published = options.published
-  if (options.featured !== undefined) where.featured = options.featured
   if (options.sold !== undefined) where.sold = options.sold
   if (options.search) where.name = { contains: options.search, mode: "insensitive" }
   return where

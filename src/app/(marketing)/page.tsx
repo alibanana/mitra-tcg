@@ -1,12 +1,7 @@
 export const dynamic = "force-dynamic"
 import { Hero } from "@/components/marketing/hero"
-import { CategoryTiles } from "@/components/marketing/category-tiles"
-import { ProductPreview } from "@/components/marketing/product-preview"
-import { WhyMitra } from "@/components/marketing/why-mitra"
 import { InstagramFeed } from "@/components/marketing/instagram-feed"
 import { CtaSection } from "@/components/marketing/cta-section"
-import { categoriesService } from "@/features/categories/services"
-import { productsService } from "@/features/products/services"
 import { settingsService } from "@/features/settings/services"
 import type { Metadata } from "next"
 
@@ -17,17 +12,10 @@ export const metadata: Metadata = {
 }
 
 export default async function HomePage() {
-  const [rootCategories, heroImagesRaw, featuredProducts] = await Promise.all([
-    categoriesService.getRootCategories().catch(() => []),
+  const [heroImagesRaw, heroCardsRaw] = await Promise.all([
     settingsService.getValue("hero_background_images", "[]").catch(() => "[]"),
-    productsService.getFeaturedProducts(10).catch(() => []),
+    settingsService.getValue("hero_card_images", "[]").catch(() => "[]"),
   ])
-
-  const cardImages = featuredProducts
-    .filter((p) => p.images.length > 0)
-    .map((p) => p.images[0])
-    .sort(() => Math.random() - 0.5)
-    .slice(0, 3)
 
   let heroImages: string[] = []
   try {
@@ -37,12 +25,17 @@ export default async function HomePage() {
     heroImages = []
   }
 
+  let heroCards: string[] = []
+  try {
+    heroCards = JSON.parse(heroCardsRaw)
+    if (!Array.isArray(heroCards)) heroCards = []
+  } catch {
+    heroCards = []
+  }
+
   return (
     <>
-      <Hero backgroundImages={heroImages} cardImages={cardImages} />
-      <CategoryTiles categories={rootCategories} />
-      <ProductPreview />
-      <WhyMitra />
+      <Hero backgroundImages={heroImages} cardImages={heroCards} />
       <InstagramFeed />
       <CtaSection />
     </>

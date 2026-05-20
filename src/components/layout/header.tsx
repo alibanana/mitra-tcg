@@ -54,7 +54,7 @@ export function Header({ categories = [] }: HeaderProps) {
             width={1080}
             height={1080}
             className={cn(
-              "h-16 w-auto mt-2 md:h-24 transition-opacity duration-300",
+              "h-20 w-auto mt-2 md:h-24 transition-opacity duration-300",
               overHero ? "hidden" : "dark:hidden",
             )}
             priority
@@ -65,7 +65,7 @@ export function Header({ categories = [] }: HeaderProps) {
             width={1080}
             height={1080}
             className={cn(
-              "h-16 w-auto mt-2 md:h-24 transition-opacity duration-300",
+              "h-20 w-auto mt-2 md:h-24 transition-opacity duration-300",
               overHero ? "block" : "hidden dark:block",
             )}
             priority

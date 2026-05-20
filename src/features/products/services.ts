@@ -28,11 +28,6 @@ export const productsService = {
     return productsRepository.findMany({ page, limit: 20, search })
   },
 
-  async getFeaturedProducts(limit: number = 6) {
-    const result = await productsRepository.findMany({ published: true, featured: true, limit })
-    return result.items
-  },
-
   async getProductBySlug(slug: string) {
     return productsRepository.findBySlug(slug)
   },
@@ -57,6 +52,13 @@ export const productsService = {
 
   async deleteProduct(id: string) {
     return productsRepository.delete(id)
+  },
+
+  async getAllProductImages() {
+    const result = await productsRepository.findMany({ limit: 500 })
+    return result.items
+      .filter((p) => p.images.length > 0)
+      .map((p) => ({ url: p.images[0], productName: p.name }))
   },
 
   async getProductCount() {

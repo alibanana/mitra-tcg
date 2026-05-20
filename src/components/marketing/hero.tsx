@@ -70,23 +70,11 @@ export function Hero({ backgroundImages = [], cardImages = [] }: HeroProps) {
           <p
             className={cn(
               "theme-tagline text-xs",
-              hasImages ? "text-white/80" : "text-primary",
+              hasImages ? "text-white" : "text-primary",
             )}
           >
-            Trading Card Game Store · Indonesia
+            TCG Store · Indonesia
           </p>
-          <h1 className="mt-4 text-6xl font-bold leading-tight md:text-7xl xl:text-8xl">
-            Premium<br />
-            <em
-              className={cn(
-                "not-italic",
-                hasImages ? "text-white" : "text-primary",
-              )}
-            >
-              TCG
-            </em>{" "}
-            Cards
-          </h1>
           <p
             className={cn(
               "mt-5 max-w-md text-base",
@@ -123,10 +111,9 @@ export function Hero({ backgroundImages = [], cardImages = [] }: HeroProps) {
           </div>
         </div>
 
-        {/* Card fan — only shown when featured product images are available */}
+        {/* Card fan — shown when card images are configured in settings */}
         {hasCards && (
           <div className="relative hidden lg:block h-[560px]">
-            {/* Back card — clockwise */}
             {cardImages[2] && (
               <div className="absolute bottom-[15%] left-1/2 z-10 w-64 origin-bottom -translate-x-[30%] rotate-[13deg] shadow-xl transition-transform duration-300 ease-out hover:-translate-y-4 hover:shadow-2xl">
                 <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-zinc-900">
@@ -134,7 +121,6 @@ export function Hero({ backgroundImages = [], cardImages = [] }: HeroProps) {
                 </div>
               </div>
             )}
-            {/* Middle card — counter-clockwise */}
             {cardImages[1] && (
               <div className="absolute bottom-[15%] left-1/2 z-20 w-64 origin-bottom -translate-x-[70%] rotate-[-15deg] shadow-xl transition-transform duration-300 ease-out hover:-translate-y-4 hover:shadow-2xl">
                 <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-zinc-900">
@@ -142,7 +128,6 @@ export function Hero({ backgroundImages = [], cardImages = [] }: HeroProps) {
                 </div>
               </div>
             )}
-            {/* Front card — upright */}
             <div className="absolute bottom-[15%] left-1/2 z-30 w-72 -translate-x-1/2 shadow-2xl transition-transform duration-300 ease-out hover:-translate-y-5 hover:scale-[1.03]">
               <div className="relative aspect-[3/4] overflow-hidden rounded-2xl">
                 <Image src={cardImages[0]} alt="Trading card" fill sizes="288px" className="object-cover" />
