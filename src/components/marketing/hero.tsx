@@ -20,7 +20,7 @@ export function Hero({ backgroundImages = [], cardImages = [] }: HeroProps) {
     if (!hasImages || backgroundImages.length < 2) return
     const id = setInterval(() => {
       setActiveIndex((i) => (i + 1) % backgroundImages.length)
-    }, 5000)
+    }, 3000)
     return () => clearInterval(id)
   }, [backgroundImages, hasImages])
 
@@ -38,7 +38,7 @@ export function Hero({ backgroundImages = [], cardImages = [] }: HeroProps) {
             <div
               key={url}
               className={cn(
-                "absolute inset-0 transition-opacity duration-[2000ms] ease-in-out",
+                "absolute inset-0 transition-opacity duration-[800ms] ease-in-out",
                 i === activeIndex ? "opacity-100" : "opacity-0",
               )}
             >

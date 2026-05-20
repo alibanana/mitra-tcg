@@ -8,6 +8,7 @@ import { CtaSection } from "@/components/marketing/cta-section"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { siteConfig } from "@/config/site"
+import { settingsService } from "@/features/settings/services"
 import type { Metadata } from "next"
 import type { Product } from "@/features/products/types"
 
@@ -31,10 +32,13 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
   if (!product || !product.published) notFound()
 
-  const related = await productsService.getRelatedProducts(product.id, product.categoryId).catch(() => [])
+  const [related, whatsappUrl] = await Promise.all([
+    productsService.getRelatedProducts(product.id, product.categoryId).catch(() => []),
+    settingsService.getValue("whatsapp_url"),
+  ])
 
-  const inquiryUrl = siteConfig.whatsapp
-    ? `${siteConfig.whatsapp}?text=Hi%2C%20I%27m%20interested%20in%20${encodeURIComponent(product.name)}`
+  const inquiryUrl = whatsappUrl
+    ? `${whatsappUrl}?text=Hi%2C%20I%27m%20interested%20in%20${encodeURIComponent(product.name)}`
     : siteConfig.instagram
 
   return (
