@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic"
 import Link from "next/link"
-import Image from "next/image"
 import { productsService } from "@/features/products/services"
+import { ProductThumbnail } from "@/components/dashboard/product-thumbnail"
 import { categoriesService } from "@/features/categories/services"
 import { AddProductModal } from "@/features/products/components/add-product-modal"
 import { buttonVariants } from "@/components/ui/button"
@@ -50,17 +50,9 @@ export default async function ProductsPage() {
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     {product.images[0] ? (
-                      <div className="relative h-10 w-10 shrink-0 border border-foreground/20 bg-muted">
-                        <Image
-                          src={product.images[0]}
-                          alt={product.name}
-                          fill
-                          sizes="40px"
-                          className="object-cover"
-                        />
-                      </div>
+                      <ProductThumbnail src={product.images[0]} alt={product.name} />
                     ) : (
-                      <div className="h-10 w-10 shrink-0 border border-foreground/20 bg-muted" />
+                      <div className="w-[192px] shrink-0 border border-foreground/20 bg-muted" style={{ aspectRatio: "3/4" }} />
                     )}
                     <span className="truncate font-medium">{product.name}</span>
                   </div>

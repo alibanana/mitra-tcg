@@ -6,7 +6,7 @@ import type { Product } from "@/features/products/types"
 export async function ProductPreview() {
   let products: Awaited<ReturnType<typeof productsService.getFeaturedProducts>> = []
   try {
-    products = await productsService.getFeaturedProducts(6)
+    products = await productsService.getFeaturedProducts(100)
   } catch {
     return null
   }

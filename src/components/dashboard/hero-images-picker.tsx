@@ -26,7 +26,7 @@ export function HeroImagesPicker({ initialImages }: HeroImagesPickerProps) {
       {isPending && (
         <p className="text-xs text-muted-foreground">Saving…</p>
       )}
-      <ImageUploader initialUrls={initialImages} onChange={handleChange} />
+      <ImageUploader initialUrls={initialImages} onChange={handleChange} variant="landscape" />
     </div>
   )
 }

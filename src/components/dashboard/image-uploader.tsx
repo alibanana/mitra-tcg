@@ -10,9 +10,10 @@ interface ImageUploaderProps {
   name?: string
   onChange?: (urls: string[]) => void
   maxImages?: number
+  variant?: "card" | "landscape"
 }
 
-export function ImageUploader({ initialUrls = [], name, onChange, maxImages }: ImageUploaderProps) {
+export function ImageUploader({ initialUrls = [], name, onChange, maxImages, variant = "card" }: ImageUploaderProps) {
   const [urls, setUrls] = useState<string[]>(initialUrls)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -59,10 +60,25 @@ export function ImageUploader({ initialUrls = [], name, onChange, maxImages }: I
       {name && <input type="hidden" name={name} value={JSON.stringify(urls)} />}
 
       {urls.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-3">
           {urls.map((url) => (
-            <div key={url} className="group relative h-20 w-20 shrink-0 overflow-hidden border-2 border-foreground">
-              <Image src={url} alt="" fill sizes="80px" className="object-cover" />
+            <div
+              key={url}
+              className="group relative shrink-0 overflow-hidden border-2 border-foreground"
+              style={
+                variant === "landscape"
+                  ? { width: 240, aspectRatio: "16/9" }
+                  : { width: 160, aspectRatio: "3/4" }
+              }
+            >
+              <Image
+                src={url}
+                alt=""
+                fill
+                sizes={variant === "landscape" ? "240px" : "160px"}
+                loading="lazy"
+                className="object-cover"
+              />
               <button
                 type="button"
                 onClick={() => remove(url)}
