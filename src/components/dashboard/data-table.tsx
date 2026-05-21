@@ -120,40 +120,65 @@ export function DataTable({
   emptyMessage = "No data found",
 }: DataTableProps) {
   return (
-    <div className="overflow-hidden rounded-lg border">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/40 hover:bg-muted/40">
-            {columns.map((col) => (
-              <TableHead
-                key={col.key}
-                className={`text-xs font-semibold uppercase tracking-wider text-muted-foreground${col.hideOnMobile ? " hidden md:table-cell" : ""}`}
-              >
-                {col.header}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground">
-                {emptyMessage}
-              </TableCell>
-            </TableRow>
-          ) : (
-            data.map((row, i) => (
-              <TableRow key={i} className="transition-colors hover:bg-muted/30">
-                {columns.map((col) => (
-                  <TableCell key={col.key} className={`text-sm${col.hideOnMobile ? " hidden md:table-cell" : ""}`}>
+    <>
+      {/* Mobile card view */}
+      <div className="md:hidden space-y-2">
+        {data.length === 0 ? (
+          <p className="py-8 text-center text-sm text-muted-foreground">{emptyMessage}</p>
+        ) : (
+          data.map((row, i) => (
+            <div key={i} className="border-2 border-foreground p-4 space-y-2">
+              {columns.map((col) => (
+                <div key={col.key} className="flex items-start justify-between gap-3">
+                  <span className="shrink-0 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    {col.header}
+                  </span>
+                  <span className="text-right text-sm">
                     <CellContent col={col} row={row} />
-                  </TableCell>
-                ))}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop table view */}
+      <div className="hidden md:block overflow-hidden rounded-lg border">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/40 hover:bg-muted/40">
+              {columns.map((col) => (
+                <TableHead
+                  key={col.key}
+                  className={`text-xs font-semibold uppercase tracking-wider text-muted-foreground${col.hideOnMobile ? " hidden md:table-cell" : ""}`}
+                >
+                  {col.header}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground">
+                  {emptyMessage}
+                </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </div>
+            ) : (
+              data.map((row, i) => (
+                <TableRow key={i} className="transition-colors hover:bg-muted/30">
+                  {columns.map((col) => (
+                    <TableCell key={col.key} className={`text-sm${col.hideOnMobile ? " hidden md:table-cell" : ""}`}>
+                      <CellContent col={col} row={row} />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </>
   )
 }

@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { logoutAction } from "@/features/auth/actions"
-import { Menu, LayoutDashboard, Package, Settings, Mail, LogOut } from "lucide-react"
+import { Menu, LayoutDashboard, Package, Tag, Settings, Mail, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useState } from "react"
@@ -12,6 +12,7 @@ import { useState } from "react"
 const navItems = [
   { title: "Overview", href: "/dashboard", icon: LayoutDashboard },
   { title: "Products", href: "/dashboard/products", icon: Package },
+  { title: "Categories", href: "/dashboard/categories", icon: Tag },
   { title: "Contacts", href: "/dashboard/contacts", icon: Mail },
   { title: "Settings", href: "/dashboard/settings", icon: Settings },
 ]

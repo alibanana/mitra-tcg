@@ -121,7 +121,7 @@ export function Header({ categories = [] }: HeaderProps) {
           {/* Theme toggle — icon reflects actual theme, colour forced white over hero */}
           <ThemeToggle
             className={cn(
-              "transition-colors duration-300",
+              "transition-colors duration-300 h-10 w-10 md:h-9 md:w-9",
               overHero && "text-white hover:bg-white/20",
             )}
           />

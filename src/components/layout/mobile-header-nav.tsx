@@ -33,7 +33,7 @@ function ProductsMobileItem({
       <button
         onClick={() => setExpanded((v) => !v)}
         className={cn(
-          "flex w-full items-center justify-between px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors",
+          "flex w-full items-center justify-between px-4 py-3 text-base font-semibold uppercase tracking-wide transition-colors",
           isActive
             ? "bg-primary text-primary-foreground"
             : "text-foreground hover:bg-muted",
@@ -53,7 +53,7 @@ function ProductsMobileItem({
             href="/products"
             onClick={onNavigate}
             className={cn(
-              "block px-6 py-2.5 text-xs font-semibold uppercase tracking-wide transition-colors hover:bg-muted hover:text-foreground",
+              "block px-6 py-2.5 text-sm font-semibold uppercase tracking-wide transition-colors hover:bg-muted hover:text-foreground",
               pathname === "/products"
                 ? "text-primary"
                 : "text-muted-foreground",
@@ -66,7 +66,7 @@ function ProductsMobileItem({
               <Link
                 href={`/products?category=${cat.slug}`}
                 onClick={onNavigate}
-                className="block px-6 py-2.5 text-xs font-semibold uppercase tracking-wide transition-colors hover:bg-muted hover:text-foreground"
+                className="block px-6 py-2.5 text-sm font-semibold uppercase tracking-wide transition-colors hover:bg-muted hover:text-foreground"
               >
                 {cat.name}
               </Link>
@@ -75,7 +75,7 @@ function ProductsMobileItem({
                   <Link
                     href={`/products?category=${child.slug}`}
                     onClick={onNavigate}
-                    className="block pl-9 pr-6 py-2 text-xs tracking-wide text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    className="block pl-9 pr-6 py-2 text-sm tracking-wide text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   >
                     {child.name}
                   </Link>
@@ -84,7 +84,7 @@ function ProductsMobileItem({
                       key={grandchild.id}
                       href={`/products?category=${grandchild.slug}`}
                       onClick={onNavigate}
-                      className="block pl-12 pr-6 py-2 text-xs tracking-wide text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
+                      className="block pl-12 pr-6 py-2 text-sm tracking-wide text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
                     >
                       {grandchild.name}
                     </Link>
@@ -110,11 +110,11 @@ export function MobileHeaderNav({
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         className={cn(
-          "inline-flex items-center justify-center rounded-none border-2 border-foreground p-1.5 md:hidden transition-colors duration-300",
+          "inline-flex items-center justify-center rounded-none border-2 border-foreground p-2 md:hidden transition-colors duration-300",
           className,
         )}
       >
-        <Menu className="h-4 w-4" />
+        <Menu className="h-5 w-5" />
         <span className="sr-only">Toggle menu</span>
       </SheetTrigger>
       <SheetContent
@@ -157,7 +157,7 @@ export function MobileHeaderNav({
                 href={item.href}
                 onClick={() => setOpen(false)}
                 className={cn(
-                  "flex items-center px-4 py-3 text-sm font-semibold uppercase tracking-wide transition-colors",
+                  "flex items-center px-4 py-3 text-base font-semibold uppercase tracking-wide transition-colors",
                   pathname === item.href
                     ? "bg-primary text-primary-foreground"
                     : "text-foreground hover:bg-muted",

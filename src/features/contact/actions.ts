@@ -30,3 +30,9 @@ export async function deleteContactAction(id: string) {
   revalidatePath("/dashboard/contacts")
   return { success: true }
 }
+
+export async function bulkDeleteContactsAction(ids: string[]) {
+  await Promise.all(ids.map((id) => contactService.deleteSubmission(id)))
+  revalidatePath("/dashboard/contacts")
+  return { success: true }
+}

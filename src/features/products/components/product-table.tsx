@@ -107,7 +107,73 @@ export function ProductTable({ products }: ProductTableProps) {
         </div>
       )}
 
-      <div className="overflow-x-auto border-2 border-foreground">
+      {/* Mobile card view */}
+      <div className="md:hidden space-y-2">
+        {products.length === 0 && (
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            No products yet. Add your first one!
+          </p>
+        )}
+        {products.map((product) => (
+          <div
+            key={product.id}
+            className={cn(
+              "flex items-start gap-3 border-2 border-foreground p-3",
+              selectedIds.has(product.id) && "bg-muted/30",
+            )}
+          >
+            <input
+              type="checkbox"
+              className="mt-1 h-4 w-4 shrink-0 cursor-pointer"
+              checked={selectedIds.has(product.id)}
+              onChange={() => toggleOne(product.id)}
+              aria-label={`Select ${product.name}`}
+            />
+            {product.images[0] ? (
+              <ProductThumbnail src={product.images[0]} alt={product.name} className="w-12" sizes="48px" />
+            ) : (
+              <div className="w-12 shrink-0 border border-foreground/20 bg-muted" style={{ aspectRatio: "3/4" }} />
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{product.name}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">{product.category.name}</p>
+              <div className="mt-1.5">
+                {product.published ? (
+                  <span className="bg-primary px-2 py-0.5 text-xs font-bold uppercase text-primary-foreground">
+                    Live
+                  </span>
+                ) : (
+                  <span className="border border-foreground/30 px-2 py-0.5 text-xs font-bold uppercase text-muted-foreground">
+                    Draft
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex shrink-0 flex-col gap-1">
+              <Link
+                href={`/dashboard/products/${product.id}/edit`}
+                className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-7 w-7")}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                <span className="sr-only">Edit</span>
+              </Link>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => promptDelete([product.id])}
+                disabled={isPending}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span className="sr-only">Delete</span>
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop table view */}
+      <div className="hidden overflow-x-auto border-2 border-foreground md:block">
         <table className="w-full text-sm">
           <thead className="border-b-2 border-foreground bg-muted">
             <tr>
