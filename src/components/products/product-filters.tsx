@@ -17,18 +17,26 @@ interface ProductFiltersProps {
   categories: FlatCategory[]
 }
 
+const SORT_OPTIONS = [
+  { value: "newest",    label: "Newest First" },
+  { value: "oldest",    label: "Oldest First" },
+  { value: "name_asc",  label: "Name A–Z" },
+  { value: "name_desc", label: "Name Z–A" },
+]
+
 export function ProductFilters({ categories }: ProductFiltersProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [, startTransition] = useTransition()
   const [search, setSearch] = useState(searchParams.get("search") ?? "")
   const [category, setCategory] = useState(searchParams.get("category") ?? "all")
+  const [sort, setSort] = useState(searchParams.get("sort") ?? "newest")
   const debouncedSearch = useDebounce(search, 300)
 
   function updateParam(key: string, value: string | null) {
     if (value === null) return
     const params = new URLSearchParams(searchParams.toString())
-    if (value && value !== "all") {
+    if (value && value !== "all" && value !== "newest") {
       params.set(key, value)
     } else {
       params.delete(key)
@@ -44,6 +52,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
 
   useEffect(() => {
     setCategory(searchParams.get("category") ?? "all")
+    setSort(searchParams.get("sort") ?? "newest")
   }, [searchParams])
 
   return (
@@ -74,6 +83,22 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
                 {cat.depth > 0 ? "↳ " : ""}{cat.name}
               </span>
             </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={sort}
+        onValueChange={(v) => { setSort(v); updateParam("sort", v) }}
+      >
+        <SelectTrigger className="!h-11 sm:w-[180px]">
+          <SelectValue>
+            {(v: string) => SORT_OPTIONS.find(o => o.value === v)?.label ?? "Newest First"}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {SORT_OPTIONS.map((o) => (
+            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
           ))}
         </SelectContent>
       </Select>

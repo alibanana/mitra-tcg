@@ -7,6 +7,7 @@ import type { Product } from "@/features/products/types"
 interface Filters {
   category?: string
   search?: string
+  sort?: "newest" | "oldest" | "name_asc" | "name_desc"
 }
 
 interface ProductGridProps {

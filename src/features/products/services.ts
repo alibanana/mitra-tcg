@@ -8,7 +8,7 @@ const PAGE_SIZE = 12
 export const productsService = {
   async getPublishedProducts(
     page: number = 1,
-    filters: { category?: string; search?: string } = {},
+    filters: { category?: string; search?: string; sort?: "newest" | "oldest" | "name_asc" | "name_desc" } = {},
   ) {
     let categoryIds: string[] | undefined
     if (filters.category) {
@@ -21,6 +21,8 @@ export const productsService = {
       limit: PAGE_SIZE,
       categoryIds,
       search: filters.search,
+      orderBy: filters.sort === "name_asc" || filters.sort === "name_desc" ? "name" : "createdAt",
+      orderDir: filters.sort === "oldest" || filters.sort === "name_asc" ? "asc" : "desc",
     })
   },
 

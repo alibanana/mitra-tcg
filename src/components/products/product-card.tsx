@@ -80,9 +80,9 @@ export function ProductCard({ product, priority = false, whatsappUrl }: ProductC
                 e.stopPropagation()
                 window.open(inquiryUrl, "_blank", "noopener,noreferrer")
               }}
-              className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
+              className="group/msg cursor-pointer flex items-center gap-1.5 text-sm font-semibold text-primary transition-opacity duration-150 hover:opacity-70"
             >
-              <MessageCircle className="h-3.5 w-3.5" />
+              <MessageCircle className="h-3.5 w-3.5 transition-transform duration-150 group-hover/msg:scale-110" />
               Message us
             </button>
           ) : (

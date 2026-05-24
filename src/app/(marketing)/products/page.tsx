@@ -13,18 +13,24 @@ import type { Product } from "@/features/products/types"
 
 export const metadata: Metadata = { title: "Products" }
 
+const VALID_SORTS = ["newest", "oldest", "name_asc", "name_desc"] as const
+type SortValue = typeof VALID_SORTS[number]
+
 interface ProductsPageProps {
   searchParams: Promise<{
     category?: string
     search?: string
+    sort?: string
   }>
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   const raw = await searchParams
+  const sort = (VALID_SORTS as readonly string[]).includes(raw.sort ?? "") ? raw.sort as SortValue : undefined
   const params = {
     ...(raw.category ? { category: raw.category } : {}),
     ...(raw.search ? { search: raw.search } : {}),
+    ...(sort ? { sort } : {}),
   }
 
   const [result, flatCategories, rawWhatsappUrl] = await Promise.all([
