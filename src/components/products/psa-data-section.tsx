@@ -51,9 +51,10 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 interface Props {
   psaCert: PsaCert
+  inline?: boolean
 }
 
-export function PsaDataSection({ psaCert }: Props) {
+export function PsaDataSection({ psaCert, inline = false }: Props) {
   const [open, setOpen] = useState(false)
 
   const grade = psaCert.cardGrade ?? psaCert.gradeDescription ?? "—"
@@ -79,26 +80,8 @@ export function PsaDataSection({ psaCert }: Props) {
     psaCert.reverseBarCode && { label: "Reverse Barcode", value: "Yes" },
   ].filter(Boolean) as { label: string; value: string }[]
 
-  const dialogContent = (
-    <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
-      <DialogHeader>
-        <div className="flex items-center justify-between gap-2">
-          <DialogTitle className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-primary" />
-            PSA Card Insights
-          </DialogTitle>
-          <a
-            href={`https://www.psacard.com/cert/${psaCert.certNumber}/psa`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mr-8 flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
-          >
-            <ExternalLink className="h-3 w-3" />
-            View on PSA
-          </a>
-        </div>
-      </DialogHeader>
-
+  const fullDetails = (
+    <>
       <div className="border-b border-border pb-5">
         <SectionLabel>Card Details</SectionLabel>
         <div className="grid grid-cols-2 gap-x-8 gap-y-2.5 text-sm sm:grid-cols-3">
@@ -111,7 +94,7 @@ export function PsaDataSection({ psaCert }: Props) {
         </div>
       </div>
 
-      <div>
+      <div className="pt-5">
         <SectionLabel>Total PSA Population</SectionLabel>
 
         {!popData && (
@@ -165,17 +148,41 @@ export function PsaDataSection({ psaCert }: Props) {
           </div>
         )}
       </div>
+    </>
+  )
+
+  const dialogContent = (
+    <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
+      <DialogHeader>
+        <div className="flex items-center justify-between gap-2">
+          <DialogTitle className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-primary" />
+            PSA Card Insights
+          </DialogTitle>
+          <a
+            href={`https://www.psacard.com/cert/${psaCert.certNumber}/psa`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mr-8 flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
+          >
+            <ExternalLink className="h-3 w-3" />
+            View on PSA
+          </a>
+        </div>
+      </DialogHeader>
+      {fullDetails}
     </DialogContent>
   )
 
   return (
     <div className="border-2 border-foreground p-4">
-      {/* Header row — mobile: label left + "See all data" right */}
+      {/* Header row */}
       <div className="mb-3 flex items-center justify-between gap-1.5">
         <div className="flex items-center gap-1.5">
           <ShieldCheck className="h-3.5 w-3.5 text-primary" />
           <span className="text-xs font-bold uppercase tracking-wide text-primary">PSA Certified</span>
         </div>
+        {/* Mobile: always show dialog trigger */}
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger className="text-sm font-semibold underline underline-offset-2 hover:no-underline sm:hidden">
             See all data →
@@ -184,7 +191,7 @@ export function PsaDataSection({ psaCert }: Props) {
         </Dialog>
       </div>
 
-      {/* Stats row — desktop: grade/cert/pop left + PSA link + "See all data" right */}
+      {/* Stats row */}
       <div className="flex items-end gap-6">
         <div>
           <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Grade</p>
@@ -209,14 +216,24 @@ export function PsaDataSection({ psaCert }: Props) {
             <ExternalLink className="h-3.5 w-3.5" />
             PSA
           </a>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger className="hidden text-sm font-semibold underline underline-offset-2 hover:no-underline sm:inline">
-              See all data →
-            </DialogTrigger>
-            {dialogContent}
-          </Dialog>
+          {/* Desktop: hide trigger when inline mode is active */}
+          {!inline && (
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger className="hidden text-sm font-semibold underline underline-offset-2 hover:no-underline sm:inline">
+                See all data →
+              </DialogTrigger>
+              {dialogContent}
+            </Dialog>
+          )}
         </div>
       </div>
+
+      {/* Inline full details — desktop only, when no description */}
+      {inline && (
+        <div className="mt-5 hidden border-t border-border pt-5 sm:block">
+          {fullDetails}
+        </div>
+      )}
     </div>
   )
 }

@@ -47,7 +47,7 @@ export const productsService = {
 
   async getRelatedProducts(excludeId: string, categoryId: string, limit: number = 4) {
     const categoryIds = await categoriesService.getDescendantIds(categoryId)
-    const result = await productsRepository.findMany({ published: true, categoryIds, limit })
+    const result = await productsRepository.findMany({ published: true, categoryIds, limit: limit + 1 })
     return result.items.filter((p) => p.id !== excludeId).slice(0, limit)
   },
 

@@ -85,7 +85,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
               </a>
 
               {product.psaCert && (
-                <PsaDataSection psaCert={product.psaCert} />
+                <PsaDataSection psaCert={product.psaCert} inline={!product.description} />
               )}
 
               {product.description && (
