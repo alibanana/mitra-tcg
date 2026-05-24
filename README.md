@@ -43,6 +43,14 @@ NEXT_PUBLIC_WHATSAPP_URL="https://wa.me/..."
 
 ADMIN_EMAIL="..."
 ADMIN_PASSWORD="..."
+
+# Optional — PSA API tokens (comma-separated for rotation)
+PSA_TOKEN="..."
+
+# Optional — image compression limits
+IMAGE_MAX_KB=500
+IMAGE_MAX_WIDTH=1200
+IMAGE_MAX_HEIGHT=1200
 ```
 
 ### Setup
@@ -53,8 +61,8 @@ npm install
 # Push schema to database
 npm run db:push
 
-# Seed initial data
-npm run db:seed
+# Create initial admin user
+npm run create-admin
 
 # Start dev server
 npm run dev
@@ -69,12 +77,15 @@ src/
 ├── app/
 │   ├── (marketing)/        # Public site: /, /products, /about, /contact
 │   ├── (dashboard)/        # Admin UI: /dashboard/**  (auth-protected)
-│   ├── api/                # Route handlers: auth, contact, upload
-│   └── login/              # Auth page
+│   ├── api/                # Route handlers: auth, contact, upload, psa-import
+│   ├── login/              # Auth page
+│   └── unauthorized/       # 403 page
 ├── components/
 │   ├── ui/                 # shadcn base components
 │   ├── layout/             # Header, footer, sidebar, mobile nav
-│   ├── products/           # Product card, grid, filters, gallery
+│   ├── marketing/          # Hero, category tiles, CTA, Instagram feed
+│   ├── products/           # Product card, grid, filters, gallery, PSA data
+│   ├── forms/              # Wrapped form inputs (React Hook Form)
 │   ├── dashboard/          # Data table, stats card, image uploader, hero picker
 │   └── shared/             # Confirm dialog, error boundary, spinner
 ├── features/               # Feature modules (actions, services, repositories, schemas)
@@ -83,11 +94,12 @@ src/
 │   ├── categories/
 │   ├── media/              # GCS upload/delete logic (no dashboard page — inline upload only)
 │   ├── contact/
-│   └── settings/
-├── lib/                    # Prisma client, auth config, GCS, utils
+│   ├── settings/
+│   └── users/
+├── lib/                    # Prisma client, auth config, GCS, utils, SEO helpers
 ├── config/                 # Site config, nav routes
 ├── providers/              # QueryProvider, ThemeProvider
-├── hooks/                  # Custom React hooks
+├── hooks/                  # Custom React hooks (use-debounce)
 ├── types/                  # Shared TypeScript types
 └── middleware.ts           # Auth guard for /dashboard routes
 ```
@@ -120,8 +132,8 @@ features/[feature]/
 
 | Role | Access |
 |---|---|
-| `ADMIN` | Full access: products, categories, contacts, settings, user management |
-| `EDITOR` | Products, categories |
+| `SUPER_ADMIN` | Full access: products, categories, contacts, settings, user management |
+| `ADMIN` | Products, categories, contacts, settings |
 
 ## Key URLs
 
@@ -138,3 +150,5 @@ features/[feature]/
 | `/dashboard/categories` | Category management |
 | `/dashboard/contacts` | Contact submissions |
 | `/dashboard/settings` | Site settings, hero background images |
+| `/dashboard/users` | User management (SUPER_ADMIN only) |
+| `/unauthorized` | 403 page for insufficient role |

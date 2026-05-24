@@ -147,7 +147,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
               <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
                 Category
               </label>
-              <Select value={pendingCategory} onValueChange={setPendingCategory}>
+              <Select value={pendingCategory} onValueChange={(v) => setPendingCategory(v ?? "all")}>
                 <SelectTrigger className="h-10 w-full">
                   <SelectValue>
                     {(v: string) =>
@@ -172,7 +172,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
               <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
                 Sort
               </label>
-              <Select value={pendingSort} onValueChange={setPendingSort}>
+              <Select value={pendingSort} onValueChange={(v) => setPendingSort(v ?? "newest")}>
                 <SelectTrigger className="h-10 w-full">
                   <SelectValue>
                     {(v: string) => SORT_OPTIONS.find((o) => o.value === v)?.label ?? "Newest First"}
@@ -200,7 +200,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
 
       {/* Desktop: inline dropdowns */}
       <div className="hidden sm:flex sm:items-center sm:gap-4">
-        <Select value={category} onValueChange={(v) => applyParam("category", v)}>
+        <Select value={category} onValueChange={(v) => applyParam("category", v ?? "all")}>
           <SelectTrigger className="!h-11 w-[220px]">
             <SelectValue>
               {(v: string) =>
@@ -221,7 +221,7 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
           </SelectContent>
         </Select>
 
-        <Select value={sort} onValueChange={(v) => applyParam("sort", v)}>
+        <Select value={sort} onValueChange={(v) => applyParam("sort", v ?? "newest")}>
           <SelectTrigger className="!h-11 w-[180px]">
             <SelectValue>
               {(v: string) => SORT_OPTIONS.find((o) => o.value === v)?.label ?? "Newest First"}
