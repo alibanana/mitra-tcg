@@ -2,10 +2,12 @@ export const dynamic = "force-dynamic"
 import { Suspense } from "react"
 import { productsService } from "@/features/products/services"
 import { categoriesService } from "@/features/categories/services"
+import { settingsService } from "@/features/settings/services"
 import { ProductGrid } from "@/components/products/product-grid"
 import { ProductFilters } from "@/components/products/product-filters"
 import { CtaSection } from "@/components/marketing/cta-section"
 import Link from "next/link"
+import { normalizeUrl } from "@/lib/utils"
 import type { Metadata } from "next"
 import type { Product } from "@/features/products/types"
 
@@ -25,10 +27,12 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     ...(raw.search ? { search: raw.search } : {}),
   }
 
-  const [result, flatCategories] = await Promise.all([
+  const [result, flatCategories, rawWhatsappUrl] = await Promise.all([
     productsService.getPublishedProducts(1, params).catch(() => ({ items: [], total: 0, totalPages: 0 })),
     categoriesService.getFlatCategories().catch(() => []),
+    settingsService.getValue("whatsapp_url").catch(() => null),
   ])
+  const whatsappUrl = rawWhatsappUrl ? normalizeUrl(rawWhatsappUrl) : null
 
   const products = result.items as Product[]
   const { total, totalPages } = result
@@ -64,6 +68,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               initialProducts={products}
               initialHasMore={totalPages > 1}
               filters={params}
+              whatsappUrl={whatsappUrl}
             />
           )}
         </div>

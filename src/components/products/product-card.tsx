@@ -9,10 +9,14 @@ import type { Product } from "@/features/products/types"
 interface ProductCardProps {
   product: Product
   priority?: boolean
+  whatsappUrl?: string | null
 }
 
-export function ProductCard({ product, priority = false }: ProductCardProps) {
+export function ProductCard({ product, priority = false, whatsappUrl }: ProductCardProps) {
   const [hovered, setHovered] = useState(false)
+  const inquiryUrl = whatsappUrl
+    ? `${whatsappUrl}?text=Hi%2C%20I%27m%20interested%20in%20${encodeURIComponent(product.name)}`
+    : null
 
   return (
     <Link
@@ -69,10 +73,24 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
         <p className="flex-1 text-sm font-semibold leading-snug">{product.name}</p>
 
         <div className="mt-auto">
-          <span className="flex items-center gap-1.5 text-sm font-semibold text-primary">
-            <MessageCircle className="h-3.5 w-3.5" />
-            Message us
-          </span>
+          {!product.sold && inquiryUrl ? (
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                window.open(inquiryUrl, "_blank", "noopener,noreferrer")
+              }}
+              className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+              Message us
+            </button>
+          ) : (
+            <span className="flex items-center gap-1.5 text-sm font-semibold text-primary">
+              <MessageCircle className="h-3.5 w-3.5" />
+              {product.sold ? "Sold Out" : "Message us"}
+            </span>
+          )}
         </div>
       </div>
     </Link>
