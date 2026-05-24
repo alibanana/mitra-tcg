@@ -11,9 +11,10 @@ interface ImageUploaderProps {
   onChange?: (urls: string[]) => void
   maxImages?: number
   variant?: "card" | "landscape"
+  uploadType?: string
 }
 
-export function ImageUploader({ initialUrls = [], name, onChange, maxImages, variant = "card" }: ImageUploaderProps) {
+export function ImageUploader({ initialUrls = [], name, onChange, maxImages, variant = "card", uploadType }: ImageUploaderProps) {
   const [urls, setUrls] = useState<string[]>(initialUrls)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -41,7 +42,8 @@ export function ImageUploader({ initialUrls = [], name, onChange, maxImages, var
     for (const file of toUpload) {
       const fd = new FormData()
       fd.set("file", file)
-      const res = await fetch("/api/upload", { method: "POST", body: fd })
+      const url = uploadType ? `/api/upload?type=${uploadType}` : "/api/upload"
+      const res = await fetch(url, { method: "POST", body: fd })
       if (!res.ok) {
         setError("One or more files failed to upload.")
         break

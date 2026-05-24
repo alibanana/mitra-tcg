@@ -1,4 +1,4 @@
-export type JobStatus = "pending" | "done" | "failed"
+export type JobStatus = "pending" | "done" | "failed" | "quota_exceeded"
 
 // Persisted on `global` so hot-module reloads in dev don't wipe the map.
 const g = global as typeof global & { _psaJobs?: Map<string, JobStatus> }

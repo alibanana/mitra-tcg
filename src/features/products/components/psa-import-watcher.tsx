@@ -4,30 +4,44 @@ import { useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
-const STORAGE_KEY = "psa_pending_import"
+const STORAGE_KEY = "psa_bulk_import"
 const POLL_MS = 2_000
 const MAX_AGE_MS = 2 * 60 * 1_000
 
-type ActiveJob = {
-  jobId: string
-  intervalId: ReturnType<typeof setInterval>
-  toastId: string | number
+type StoredJob = { jobId: string; certId: string; startedAt: number }
+type ActiveJob = { toastId: string | number; intervalId: ReturnType<typeof setInterval> }
+
+function getStoredJobs(): StoredJob[] {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]")
+  } catch {
+    return []
+  }
+}
+
+function removeStoredJob(jobId: string) {
+  const updated = getStoredJobs().filter((j) => j.jobId !== jobId)
+  if (updated.length > 0) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+  } else {
+    localStorage.removeItem(STORAGE_KEY)
+  }
 }
 
 export function PsaImportWatcher() {
   const router = useRouter()
-  const active = useRef<ActiveJob | null>(null)
+  const active = useRef<Map<string, ActiveJob>>(new Map())
 
-  function startWatching(jobId: string) {
-    if (active.current?.jobId === jobId) return
-    if (active.current) clearInterval(active.current.intervalId)
+  function startWatching(jobId: string, certId: string) {
+    if (active.current.has(jobId)) return
 
-    const toastId = toast.loading("Importing PSA product…")
+    const toastId = toast.loading(`Importing PSA #${certId}…`)
 
     function stop() {
-      if (active.current) clearInterval(active.current.intervalId)
-      active.current = null
-      localStorage.removeItem(STORAGE_KEY)
+      const job = active.current.get(jobId)
+      if (job) clearInterval(job.intervalId)
+      active.current.delete(jobId)
+      removeStoredJob(jobId)
     }
 
     const intervalId = setInterval(async () => {
@@ -37,11 +51,14 @@ export function PsaImportWatcher() {
 
         if (status === "done") {
           stop()
-          toast.success("Product imported successfully!", { id: toastId })
+          toast.success(`PSA #${certId} imported successfully!`, { id: toastId })
           router.refresh()
+        } else if (status === "quota_exceeded") {
+          stop()
+          toast.error(`PSA #${certId}: API quota exceeded (100/day). Contact collectors-apis@collectors.com.`, { id: toastId })
         } else if (status === "failed" || status === "not_found") {
           stop()
-          toast.error("Import failed. Please try again.", { id: toastId })
+          toast.error(`Failed to import PSA #${certId}. Please try again.`, { id: toastId })
         }
       } catch {
         stop()
@@ -49,10 +66,10 @@ export function PsaImportWatcher() {
       }
     }, POLL_MS)
 
-    active.current = { jobId, intervalId, toastId }
+    active.current.set(jobId, { toastId, intervalId })
 
     setTimeout(() => {
-      if (active.current?.jobId === jobId) {
+      if (active.current.has(jobId)) {
         stop()
         toast.dismiss(toastId)
       }
@@ -60,31 +77,27 @@ export function PsaImportWatcher() {
   }
 
   useEffect(() => {
-    // Resume polling after a page refresh
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      try {
-        const { jobId, startedAt } = JSON.parse(stored) as { jobId: string; startedAt: number }
-        if (Date.now() - startedAt < MAX_AGE_MS) {
-          startWatching(jobId)
-        } else {
-          localStorage.removeItem(STORAGE_KEY)
-        }
-      } catch {
-        localStorage.removeItem(STORAGE_KEY)
+    // Resume any jobs that survived a page refresh
+    const stored = getStoredJobs()
+    for (const { jobId, certId, startedAt } of stored) {
+      if (Date.now() - startedAt < MAX_AGE_MS) {
+        startWatching(jobId, certId)
+      } else {
+        removeStoredJob(jobId)
       }
     }
 
-    // Also listen for new imports without a page refresh
     function onImportStarted(e: Event) {
-      const { jobId } = (e as CustomEvent<{ jobId: string }>).detail
-      startWatching(jobId)
+      const { jobs } = (e as CustomEvent<{ jobs: Array<{ jobId: string; certId: string }> }>).detail
+      for (const { jobId, certId } of jobs) {
+        startWatching(jobId, certId)
+      }
     }
 
     window.addEventListener("psa-import-started", onImportStarted)
     return () => {
       window.removeEventListener("psa-import-started", onImportStarted)
-      if (active.current) clearInterval(active.current.intervalId)
+      for (const { intervalId } of active.current.values()) clearInterval(intervalId)
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 

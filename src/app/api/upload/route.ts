@@ -16,7 +16,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 })
     }
 
-    const asset = await mediaService.uploadFile(file)
+    const type = request.nextUrl.searchParams.get("type") ?? undefined
+    const asset = await mediaService.uploadFile(file, type)
     return NextResponse.json({ data: asset }, { status: 201 })
   } catch (err) {
     console.error("[upload] POST error:", err)

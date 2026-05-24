@@ -13,6 +13,9 @@ export const envSchema = z.object({
   NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
   NEXT_PUBLIC_WHATSAPP_URL: z.string().optional(),
   PSA_TOKEN: z.string().optional(),
+  IMAGE_MAX_KB: z.coerce.number().int().positive().optional(),
+  IMAGE_MAX_WIDTH: z.coerce.number().int().positive().optional(),
+  IMAGE_MAX_HEIGHT: z.coerce.number().int().positive().optional(),
 })
 
 export type Env = z.infer<typeof envSchema>

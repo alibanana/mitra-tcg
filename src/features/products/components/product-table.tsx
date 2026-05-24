@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Pencil, Trash2 } from "lucide-react"
+import { Pencil, Trash2, Loader2, Eye, EyeOff } from "lucide-react"
 import { toast } from "sonner"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
@@ -18,7 +18,9 @@ import {
 } from "@/components/ui/alert-dialog"
 import { ProductThumbnail } from "@/components/dashboard/product-thumbnail"
 import { cn } from "@/lib/utils"
-import { bulkDeleteProductsAction } from "@/features/products/actions"
+import { bulkDeleteProductsAction, bulkUpdateStatusAction, fetchProductsAction } from "@/features/products/actions"
+
+const PAGE_SIZE = 20
 
 interface TableProduct {
   id: string
@@ -29,16 +31,57 @@ interface TableProduct {
 }
 
 interface ProductTableProps {
-  products: TableProduct[]
+  initialProducts: TableProduct[]
+  total: number
 }
 
-export function ProductTable({ products }: ProductTableProps) {
+export function ProductTable({ initialProducts, total: initialTotal }: ProductTableProps) {
   const router = useRouter()
+  const [allProducts, setAllProducts] = useState<TableProduct[]>(initialProducts)
+  const [totalCount, setTotalCount] = useState(initialTotal)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [pendingIds, setPendingIds] = useState<string[]>([])
   const [dialogOpen, setDialogOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const sentinelRef = useRef<HTMLDivElement>(null)
+  // Refs to avoid stale closures inside IntersectionObserver
+  const stateRef = useRef({ isLoading: false, loaded: initialProducts.length, total: initialTotal })
 
+  useEffect(() => { stateRef.current.total = totalCount }, [totalCount])
+
+  const loadMore = useCallback(async () => {
+    if (stateRef.current.isLoading) return
+    if (stateRef.current.loaded >= stateRef.current.total) return
+    stateRef.current.isLoading = true
+    setIsLoadingMore(true)
+    try {
+      const nextPage = Math.floor(stateRef.current.loaded / PAGE_SIZE) + 1
+      const { items, total } = await fetchProductsAction(nextPage)
+      setAllProducts((prev) => {
+        const next = [...prev, ...items] as TableProduct[]
+        stateRef.current.loaded = next.length
+        return next
+      })
+      stateRef.current.total = total
+      setTotalCount(total)
+    } finally {
+      stateRef.current.isLoading = false
+      setIsLoadingMore(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el) return
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) loadMore()
+    }, { rootMargin: "200px" })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [loadMore])
+
+  const products = allProducts
   const allSelected = products.length > 0 && selectedIds.size === products.length
   const someSelected = selectedIds.size > 0 && !allSelected
 
@@ -51,6 +94,25 @@ export function ProductTable({ products }: ProductTableProps) {
       const next = new Set(prev)
       next.has(id) ? next.delete(id) : next.add(id)
       return next
+    })
+  }
+
+  function handleBulkStatus(published: boolean) {
+    const ids = [...selectedIds]
+    startTransition(async () => {
+      const result = await bulkUpdateStatusAction(ids, published)
+      if ("error" in result) {
+        toast.error(result.error)
+        return
+      }
+      setAllProducts((prev) =>
+        prev.map((p) => (ids.includes(p.id) ? { ...p, published } : p)),
+      )
+      toast.success(
+        published
+          ? `${ids.length} ${ids.length === 1 ? "product" : "products"} published`
+          : `${ids.length} ${ids.length === 1 ? "product" : "products"} unpublished`,
+      )
     })
   }
 
@@ -94,6 +156,26 @@ export function ProductTable({ products }: ProductTableProps) {
             disabled={isPending}
           >
             Deselect all
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 border-2 border-foreground text-xs font-bold uppercase tracking-wide"
+            onClick={() => handleBulkStatus(true)}
+            disabled={isPending}
+          >
+            <Eye className="h-3.5 w-3.5" />
+            Publish
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 border-2 border-foreground text-xs font-bold uppercase tracking-wide"
+            onClick={() => handleBulkStatus(false)}
+            disabled={isPending}
+          >
+            <EyeOff className="h-3.5 w-3.5" />
+            Unpublish
           </Button>
           <Button
             size="sm"
@@ -267,6 +349,11 @@ export function ProductTable({ products }: ProductTableProps) {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Infinite scroll sentinel */}
+      <div ref={sentinelRef} className="py-2 flex justify-center">
+        {isLoadingMore && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
       </div>
 
       {/* Shared confirmation dialog */}

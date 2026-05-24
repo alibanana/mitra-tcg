@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation"
 import { Plus, ArrowRight, Sparkles } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Dialog,
   DialogContent,
@@ -21,19 +21,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { importFromPSAAction } from "@/features/products/actions"
+import { bulkImportFromPSAAction } from "@/features/products/actions"
 import type { FlatCategory } from "@/features/categories/types"
 
 interface AddProductModalProps {
   flatCategories: FlatCategory[]
 }
 
+function parseCertIds(raw: string): string[] {
+  return raw
+    .split(/[\n,]+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
+
 export function AddProductModal({ flatCategories }: AddProductModalProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
-  const [certId, setCertId] = useState("")
+  const [certInput, setCertInput] = useState("")
   const [categoryId, setCategoryId] = useState(flatCategories[0]?.id ?? "")
   const [isPending, startTransition] = useTransition()
+
+  const certIds = parseCertIds(certInput)
+  const count = certIds.length
 
   function handleManual() {
     setOpen(false)
@@ -41,8 +51,8 @@ export function AddProductModal({ flatCategories }: AddProductModalProps) {
   }
 
   function handleImport() {
-    if (!certId.trim()) {
-      toast.error("Please enter a PSA cert ID")
+    if (count === 0) {
+      toast.error("Please enter at least one PSA cert ID")
       return
     }
     if (!categoryId) {
@@ -51,21 +61,23 @@ export function AddProductModal({ flatCategories }: AddProductModalProps) {
     }
 
     startTransition(async () => {
-      const result = await importFromPSAAction(certId.trim(), categoryId)
+      const result = await bulkImportFromPSAAction(certIds, categoryId)
       if ("error" in result) {
         toast.error(result.error)
         return
       }
 
       setOpen(false)
-      setCertId("")
+      setCertInput("")
 
-      const { jobId } = result
-      localStorage.setItem(
-        "psa_pending_import",
-        JSON.stringify({ jobId, startedAt: Date.now() }),
+      // Persist jobs so they survive a page refresh
+      const stored = result.jobs.map((j) => ({ ...j, startedAt: Date.now() }))
+      const existing = JSON.parse(localStorage.getItem("psa_bulk_import") ?? "[]")
+      localStorage.setItem("psa_bulk_import", JSON.stringify([...existing, ...stored]))
+
+      window.dispatchEvent(
+        new CustomEvent("psa-import-started", { detail: { jobs: result.jobs } }),
       )
-      window.dispatchEvent(new CustomEvent("psa-import-started", { detail: { jobId } }))
     })
   }
 
@@ -110,18 +122,26 @@ export function AddProductModal({ flatCategories }: AddProductModalProps) {
               PSA Import
             </p>
             <p className="mb-4 text-sm text-muted-foreground">
-              Auto-import a graded card using its PSA cert number.
+              Auto-import graded cards by PSA cert number. Enter one per line for bulk import.
             </p>
 
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-wide">PSA Cert ID</Label>
-                <Input
-                  placeholder="e.g. 154761151"
-                  value={certId}
-                  onChange={(e) => setCertId(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleImport()}
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-bold uppercase tracking-wide">PSA Cert IDs</Label>
+                  {count > 0 && (
+                    <span className="text-xs text-muted-foreground">
+                      {count} {count === 1 ? "cert" : "certs"}
+                    </span>
+                  )}
+                </div>
+                <Textarea
+                  placeholder={"154761151\n154761152\n154761153"}
+                  value={certInput}
+                  onChange={(e) => setCertInput(e.target.value)}
                   disabled={isPending}
+                  rows={4}
+                  className="resize-none font-mono text-sm"
                 />
               </div>
 
@@ -149,9 +169,13 @@ export function AddProductModal({ flatCategories }: AddProductModalProps) {
               <Button
                 className="site-btn-primary w-full"
                 onClick={handleImport}
-                disabled={isPending || !certId.trim() || !categoryId}
+                disabled={isPending || count === 0 || !categoryId}
               >
-                {isPending ? "Importing..." : "Import Product"}
+                {isPending
+                  ? "Queuing imports…"
+                  : count > 1
+                    ? `Import ${count} Products`
+                    : "Import Product"}
               </Button>
             </div>
           </div>

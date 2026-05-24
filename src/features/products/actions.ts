@@ -18,6 +18,42 @@ async function requireAuth() {
   return session
 }
 
+const PSA_BASE = "https://api.psacard.com/publicapi"
+const PSA_QUOTA_MSG =
+  "PSA API quota exceeded (100/day). Contact collectors-apis@collectors.com."
+
+function getPSATokens(): string[] {
+  return (process.env.PSA_TOKEN ?? "")
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean)
+}
+
+// Creates a per-job PSA fetch client that automatically rotates to the next
+// token when one returns 429 (quota) or 504 (treated as quota).
+function createPSAClient(tokens: string[]) {
+  const exhausted = new Set<string>()
+
+  async function get(path: string): Promise<Response> {
+    const available = tokens.filter((t) => !exhausted.has(t))
+    for (const token of available) {
+      const res = await fetch(`${PSA_BASE}/${path}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.status !== 429 && res.status !== 504) return res
+      exhausted.add(token)
+    }
+    throw new Error("PSA_QUOTA_EXCEEDED")
+  }
+
+  return { get }
+}
+
+export async function fetchProductsAction(page: number, search?: string) {
+  await requireAuth()
+  return productsService.getAllProducts(page, search)
+}
+
 export async function createProductAction(formData: FormData) {
   await requireAuth()
 
@@ -69,6 +105,21 @@ export async function updateProductAction(id: string, formData: FormData) {
   return { success: true }
 }
 
+export async function bulkUpdateStatusAction(
+  ids: string[],
+  published: boolean,
+): Promise<{ success: true } | { error: string }> {
+  await requireAuth()
+  if (ids.length === 0) return { error: "No products selected" }
+
+  await prisma.product.updateMany({ where: { id: { in: ids } }, data: { published } })
+
+  revalidatePath("/dashboard/products")
+  revalidatePath("/products")
+
+  return { success: true }
+}
+
 export async function bulkDeleteProductsAction(
   ids: string[],
 ): Promise<{ success: true } | { error: string }> {
@@ -91,16 +142,17 @@ export async function bulkDeleteProductsAction(
 export async function fetchPsaPopulationAction(
   specId: number,
 ): Promise<{ data: unknown } | { error: string }> {
-  const token = process.env.PSA_TOKEN
-  if (!token) return { error: "PSA_TOKEN is not configured" }
+  const tokens = getPSATokens()
+  if (tokens.length === 0) return { error: "PSA_TOKEN is not configured" }
 
-  const res = await fetch(
-    `https://api.psacard.com/publicapi/pop/GetPSASpecPopulation/${specId}`,
-    { headers: { Authorization: `Bearer ${token}` } },
-  )
-  if (!res.ok) return { error: "Failed to fetch population data" }
-
-  return { data: await res.json() }
+  try {
+    const psa = createPSAClient(tokens)
+    const res = await psa.get(`pop/GetPSASpecPopulation/${specId}`)
+    if (!res.ok) return { error: "Failed to fetch population data" }
+    return { data: await res.json() }
+  } catch {
+    return { error: PSA_QUOTA_MSG }
+  }
 }
 
 export async function refreshPsaPopulationAction(
@@ -108,30 +160,32 @@ export async function refreshPsaPopulationAction(
 ): Promise<{ success: true; updatedAt: string } | { error: string }> {
   await requireAuth()
 
-  const token = process.env.PSA_TOKEN
-  if (!token) return { error: "PSA_TOKEN is not configured" }
+  const tokens = getPSATokens()
+  if (tokens.length === 0) return { error: "PSA_TOKEN is not configured" }
 
   const psaCert = await prisma.psaCert.findUnique({ where: { id: psaCertId } })
   if (!psaCert) return { error: "PSA cert not found" }
 
-  const res = await fetch(
-    `https://api.psacard.com/publicapi/pop/GetPSASpecPopulation/${psaCert.specId}`,
-    { headers: { Authorization: `Bearer ${token}` } },
-  )
-  if (!res.ok) return { error: "Failed to fetch PSA population data" }
+  try {
+    const psa = createPSAClient(tokens)
+    const res = await psa.get(`pop/GetPSASpecPopulation/${psaCert.specId}`)
+    if (!res.ok) return { error: "Failed to fetch PSA population data" }
 
-  const data = await res.json()
-  const now = new Date()
+    const data = await res.json()
+    const now = new Date()
 
-  await prisma.psaCert.update({
-    where: { id: psaCertId },
-    data: { psaPopulation: data, psaPopPopulatedAt: now },
-  })
+    await prisma.psaCert.update({
+      where: { id: psaCertId },
+      data: { psaPopulation: data, psaPopPopulatedAt: now },
+    })
 
-  revalidatePath(`/dashboard/products`)
-  revalidatePath(`/products`)
+    revalidatePath(`/dashboard/products`)
+    revalidatePath(`/products`)
 
-  return { success: true, updatedAt: now.toISOString() }
+    return { success: true, updatedAt: now.toISOString() }
+  } catch {
+    return { error: PSA_QUOTA_MSG }
+  }
 }
 
 export async function deleteProductAction(id: string) {
@@ -174,40 +228,24 @@ interface PSAImage {
   ImageURL: string
 }
 
-export async function importFromPSAAction(
-  certId: string,
-  categoryId: string,
-): Promise<{ error: string } | { success: true; jobId: string }> {
-  await requireAuth()
-
-  const token = process.env.PSA_TOKEN
-  if (!token) return { error: "PSA_TOKEN is not configured" }
-
-  const headers = { Authorization: `Bearer ${token}` }
-
-  const certRes = await fetch(
-    `https://api.psacard.com/publicapi/cert/GetByCertNumber/${certId}`,
-    { headers },
-  )
-  if (certRes.status === 400) return { error: "Invalid certificate number. Please check the cert ID and try again." }
-  if (!certRes.ok) return { error: "Failed to reach PSA. Please try again." }
-
-  const certData = await certRes.json()
-  const cert: PSACert = certData.PSACert
-  if (!cert) return { error: "No cert data found for this ID." }
-
+function startPSAImportJob(certId: string, categoryId: string, tokens: string[]): string {
   const jobId = randomUUID()
   setJobStatus(jobId, "pending")
 
   after(async () => {
+    const psa = createPSAClient(tokens)
     try {
+      const certRes = await psa.get(`cert/GetByCertNumber/${certId}`)
+      if (!certRes.ok) { setJobStatus(jobId, "failed"); return }
+
+      const certData = await certRes.json()
+      const cert: PSACert = certData.PSACert
+      if (!cert) { setJobStatus(jobId, "failed"); return }
+
       const name = [cert.Year, cert.Brand, `#${cert.CardNumber}`, cert.Subject, cert.Variety]
         .filter(Boolean).join(" ")
 
-      const [imagesRes, popRes] = await Promise.all([
-        fetch(`https://api.psacard.com/publicapi/cert/GetImagesByCertNumber/${certId}`, { headers }),
-        fetch(`https://api.psacard.com/publicapi/pop/GetPSASpecPopulation/${cert.SpecID}`, { headers }),
-      ])
+      const imagesRes = await psa.get(`cert/GetImagesByCertNumber/${certId}`)
       if (!imagesRes.ok) { setJobStatus(jobId, "failed"); return }
 
       const imagesData: PSAImage[] = await imagesRes.json()
@@ -217,7 +255,12 @@ export async function importFromPSAAction(
       ]
       if (sortedImages.length === 0) { setJobStatus(jobId, "failed"); return }
 
-      const popData = popRes.ok ? await popRes.json() : null
+      // Population is optional — don't fail the job if quota is hit here
+      let popData = null
+      try {
+        const popRes = await psa.get(`pop/GetPSASpecPopulation/${cert.SpecID}`)
+        if (popRes.ok) popData = await popRes.json()
+      } catch { /* quota or error on optional call — proceed without pop data */ }
 
       const uploadedUrls: string[] = []
       for (const img of sortedImages) {
@@ -263,10 +306,41 @@ export async function importFromPSAAction(
       revalidatePath("/dashboard/products")
       revalidatePath("/products")
       setJobStatus(jobId, "done")
-    } catch {
-      setJobStatus(jobId, "failed")
+    } catch (err) {
+      const isQuota = err instanceof Error && err.message === "PSA_QUOTA_EXCEEDED"
+      setJobStatus(jobId, isQuota ? "quota_exceeded" : "failed")
     }
   })
 
+  return jobId
+}
+
+export async function importFromPSAAction(
+  certId: string,
+  categoryId: string,
+): Promise<{ error: string } | { success: true; jobId: string }> {
+  await requireAuth()
+
+  const tokens = getPSATokens()
+  if (tokens.length === 0) return { error: "PSA_TOKEN is not configured" }
+
+  const jobId = startPSAImportJob(certId, categoryId, tokens)
   return { success: true, jobId }
+}
+
+export async function bulkImportFromPSAAction(
+  certIds: string[],
+  categoryId: string,
+): Promise<{ error: string } | { jobs: Array<{ certId: string; jobId: string }> }> {
+  await requireAuth()
+
+  const tokens = getPSATokens()
+  if (tokens.length === 0) return { error: "PSA_TOKEN is not configured" }
+
+  const jobs = certIds.map((certId) => ({
+    certId,
+    jobId: startPSAImportJob(certId, categoryId, tokens),
+  }))
+
+  return { jobs }
 }

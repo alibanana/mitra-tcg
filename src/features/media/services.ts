@@ -2,8 +2,8 @@ import { mediaRepository } from "./repositories"
 import { uploadFile, deleteFile } from "@/lib/upload"
 
 export const mediaService = {
-  async uploadFile(file: File) {
-    const { filename, url } = await uploadFile(file)
+  async uploadFile(file: File, type?: string) {
+    const { filename, url } = await uploadFile(file, type)
 
     const asset = await mediaRepository.create({
       filename,

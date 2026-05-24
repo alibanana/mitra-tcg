@@ -23,7 +23,7 @@ export default async function ProductsPage() {
         <AddProductModal flatCategories={flatCategories} />
       </div>
 
-      <ProductTable products={products} />
+      <ProductTable initialProducts={products} total={total} />
     </div>
   )
 }
