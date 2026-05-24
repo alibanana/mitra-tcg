@@ -11,6 +11,7 @@ import { siteConfig } from "@/config/site"
 import { settingsService } from "@/features/settings/services"
 import type { Metadata } from "next"
 import { PsaDataSection } from "@/components/products/psa-data-section"
+import { MessageCircle } from "lucide-react"
 import type { Product } from "@/features/products/types"
 
 interface ProductDetailPageProps {
@@ -81,7 +82,12 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
                   product.sold && "pointer-events-none opacity-50",
                 )}
               >
-                {product.sold ? "Sold Out" : "Inquire Now →"}
+                {product.sold ? "Sold Out" : (
+                  <span className="flex items-center gap-2">
+                    <MessageCircle className="h-4 w-4" />
+                    Message for pricing
+                  </span>
+                )}
               </a>
 
               {product.psaCert && (

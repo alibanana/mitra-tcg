@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
+import { MessageCircle } from "lucide-react"
 import type { Product } from "@/features/products/types"
 
 interface ProductCardProps {
@@ -68,7 +69,10 @@ export function ProductCard({ product, priority = false }: ProductCardProps) {
         <p className="flex-1 text-sm font-semibold leading-snug">{product.name}</p>
 
         <div className="mt-auto">
-          <span className="text-sm font-semibold text-primary">Inquire →</span>
+          <span className="flex items-center gap-1.5 text-sm font-semibold text-primary">
+            <MessageCircle className="h-3.5 w-3.5" />
+            Message us
+          </span>
         </div>
       </div>
     </Link>
