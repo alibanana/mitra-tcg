@@ -1,8 +1,8 @@
 export const APP_NAME = "Next.js Boilerplate"
 
 export const ROLES = {
+  SUPER_ADMIN: "SUPER_ADMIN",
   ADMIN: "ADMIN",
-  EDITOR: "EDITOR",
 } as const
 
 export const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB

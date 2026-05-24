@@ -24,8 +24,17 @@ export const productsService = {
     })
   },
 
-  async getAllProducts(page: number = 1, search?: string) {
-    return productsRepository.findMany({ page, limit: 20, search })
+  async getAllProducts(
+    page: number = 1,
+    filters: {
+      search?: string
+      categoryIds?: string[]
+      published?: boolean
+      orderBy?: "createdAt" | "name" | "updatedAt"
+      orderDir?: "asc" | "desc"
+    } = {},
+  ) {
+    return productsRepository.findMany({ page, limit: 20, ...filters })
   },
 
   async getProductBySlug(slug: string) {

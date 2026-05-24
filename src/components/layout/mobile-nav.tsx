@@ -4,12 +4,12 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { logoutAction } from "@/features/auth/actions"
-import { Menu, LayoutDashboard, Package, Tag, Settings, Mail, LogOut } from "lucide-react"
+import { Menu, LayoutDashboard, Package, Tag, Settings, Mail, LogOut, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useState } from "react"
 
-const navItems = [
+const baseItems = [
   { title: "Overview", href: "/dashboard", icon: LayoutDashboard },
   { title: "Products", href: "/dashboard/products", icon: Package },
   { title: "Categories", href: "/dashboard/categories", icon: Tag },
@@ -17,9 +17,14 @@ const navItems = [
   { title: "Settings", href: "/dashboard/settings", icon: Settings },
 ]
 
-export function MobileNav() {
+const superAdminItems = [
+  { title: "Users", href: "/dashboard/users", icon: Users },
+]
+
+export function MobileNav({ role }: { role?: string }) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const navItems = role === "SUPER_ADMIN" ? [...baseItems, ...superAdminItems] : baseItems
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -59,11 +64,7 @@ export function MobileNav() {
           })}
         </nav>
         <div className="border-t-2 border-foreground p-3">
-          <form
-            action={async () => {
-              await logoutAction()
-            }}
-          >
+          <form action={async () => { await logoutAction() }}>
             <Button
               variant="ghost"
               className="w-full justify-start gap-3 text-xs font-bold uppercase"

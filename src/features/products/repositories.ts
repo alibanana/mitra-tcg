@@ -11,6 +11,8 @@ export interface FindManyOptions {
   sold?: boolean
   page?: number
   limit?: number
+  orderBy?: "createdAt" | "name" | "updatedAt"
+  orderDir?: "asc" | "desc"
 }
 
 function buildWhere(options: FindManyOptions): Prisma.ProductWhereInput {
@@ -35,7 +37,9 @@ export const productsRepository = {
       prisma.product.findMany({
         where: buildWhere(options),
         include: categoryInclude,
-        orderBy: { createdAt: "desc" },
+        orderBy: options.orderBy
+          ? { [options.orderBy]: options.orderDir ?? "desc" }
+          : { createdAt: "desc" },
         skip,
         take: limit,
       }),

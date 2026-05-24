@@ -59,8 +59,12 @@ export function ProductFilters({ categories }: ProductFiltersProps) {
         value={category}
         onValueChange={(v) => { setCategory(v ?? "all"); updateParam("category", v) }}
       >
-        <SelectTrigger className="sm:w-[200px]">
-          <SelectValue placeholder="All Categories" />
+        <SelectTrigger className="!h-11 sm:w-[220px]">
+          <SelectValue>
+            {(v: string) => v === "all" || !v
+              ? "All Categories"
+              : (categories.find(c => c.slug === v)?.name ?? v)}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Categories</SelectItem>

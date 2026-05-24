@@ -10,6 +10,8 @@ import { uploadFromUrl, deleteFile } from "@/lib/upload"
 import { setJobStatus } from "@/lib/psa-job-store"
 import { prisma } from "@/lib/prisma"
 import { productsService } from "./services"
+import { categoriesRepository } from "@/features/categories/repositories"
+import { categoriesService } from "@/features/categories/services"
 import { productSchema } from "./schemas"
 
 async function requireAuth() {
@@ -49,9 +51,31 @@ function createPSAClient(tokens: string[]) {
   return { get }
 }
 
-export async function fetchProductsAction(page: number, search?: string) {
+export interface DashboardProductFilters {
+  search?: string
+  categoryId?: string
+  status?: "all" | "published" | "unpublished"
+  orderBy?: "createdAt" | "name" | "updatedAt"
+  orderDir?: "asc" | "desc"
+}
+
+export async function fetchProductsAction(page: number, filters: DashboardProductFilters = {}) {
   await requireAuth()
-  return productsService.getAllProducts(page, search)
+  const { search, categoryId, status, orderBy, orderDir } = filters
+
+  let categoryIds: string[] | undefined
+  if (categoryId) {
+    const cat = await categoriesRepository.findBySlug(categoryId)
+    if (cat) categoryIds = await categoriesService.getDescendantIds(cat.id)
+  }
+
+  return productsService.getAllProducts(page, {
+    search,
+    categoryIds,
+    published: status === "published" ? true : status === "unpublished" ? false : undefined,
+    orderBy,
+    orderDir,
+  })
 }
 
 export async function createProductAction(formData: FormData) {

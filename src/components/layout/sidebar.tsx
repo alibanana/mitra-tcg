@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation"
 import { siteConfig } from "@/config/site"
 import { cn } from "@/lib/utils"
 import { logoutAction } from "@/features/auth/actions"
-import { LayoutDashboard, Package, Tag, Settings, Mail, LogOut } from "lucide-react"
+import { LayoutDashboard, Package, Tag, Settings, Mail, LogOut, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-const sidebarItems = [
+const baseItems = [
   { title: "Overview", href: "/dashboard", icon: LayoutDashboard },
   { title: "Products", href: "/dashboard/products", icon: Package },
   { title: "Categories", href: "/dashboard/categories", icon: Tag },
@@ -16,8 +16,13 @@ const sidebarItems = [
   { title: "Settings", href: "/dashboard/settings", icon: Settings },
 ]
 
-export function Sidebar() {
+const superAdminItems = [
+  { title: "Users", href: "/dashboard/users", icon: Users },
+]
+
+export function Sidebar({ role }: { role?: string }) {
   const pathname = usePathname()
+  const items = role === "SUPER_ADMIN" ? [...baseItems, ...superAdminItems] : baseItems
 
   return (
     <aside className="hidden w-60 shrink-0 border-r-4 border-foreground bg-sidebar md:flex md:flex-col">
@@ -28,7 +33,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-0.5 px-2 py-3">
-        {sidebarItems.map((item) => {
+        {items.map((item) => {
           const Icon = item.icon
           const isActive =
             item.href === "/dashboard"
@@ -53,11 +58,7 @@ export function Sidebar() {
       </nav>
 
       <div className="border-t-2 border-sidebar-border p-2">
-        <form
-          action={async () => {
-            await logoutAction()
-          }}
-        >
+        <form action={async () => { await logoutAction() }}>
           <Button
             variant="ghost"
             className="w-full justify-start gap-3 text-xs font-bold uppercase tracking-wide text-muted-foreground"

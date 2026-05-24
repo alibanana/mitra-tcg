@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Pencil, Trash2, Loader2, Eye, EyeOff } from "lucide-react"
+import { Pencil, Trash2, Loader2, Eye, EyeOff, X, SlidersHorizontal } from "lucide-react"
 import { toast } from "sonner"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
@@ -16,9 +16,27 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
 import { ProductThumbnail } from "@/components/dashboard/product-thumbnail"
 import { cn } from "@/lib/utils"
-import { bulkDeleteProductsAction, bulkUpdateStatusAction, fetchProductsAction } from "@/features/products/actions"
+import { useDebounce } from "@/hooks/use-debounce"
+import { bulkDeleteProductsAction, bulkUpdateStatusAction, fetchProductsAction, type DashboardProductFilters } from "@/features/products/actions"
+import type { FlatCategory } from "@/features/categories/types"
 
 const PAGE_SIZE = 20
 
@@ -33,10 +51,60 @@ interface TableProduct {
 interface ProductTableProps {
   initialProducts: TableProduct[]
   total: number
+  flatCategories: FlatCategory[]
 }
 
-export function ProductTable({ initialProducts, total: initialTotal }: ProductTableProps) {
+export function ProductTable({ initialProducts, total: initialTotal, flatCategories }: ProductTableProps) {
   const router = useRouter()
+
+  // Filter state
+  const [search, setSearch] = useState("")
+  const [category, setCategory] = useState("")
+  const [status, setStatus] = useState<"all" | "published" | "unpublished">("all")
+  const [sort, setSort] = useState<"newest" | "oldest" | "name_asc" | "name_desc">("newest")
+  const debouncedSearch = useDebounce(search, 300)
+
+  const [filterModalOpen, setFilterModalOpen] = useState(false)
+  // Staged state for the mobile modal — only committed to real filters on "Apply"
+  const [pendingCategory, setPendingCategory] = useState("")
+  const [pendingStatus, setPendingStatus] = useState<"all" | "published" | "unpublished">("all")
+  const [pendingSort, setPendingSort] = useState<"newest" | "oldest" | "name_asc" | "name_desc">("newest")
+
+  // Sync pending state from applied state each time the modal opens
+  useEffect(() => {
+    if (filterModalOpen) {
+      setPendingCategory(category)
+      setPendingStatus(status)
+      setPendingSort(sort)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterModalOpen])
+
+  const hasActiveFilters = !!debouncedSearch || !!category || status !== "all" || sort !== "newest"
+  const activeFilterCount = [!!category, status !== "all", sort !== "newest"].filter(Boolean).length
+  const hasPendingFilters = !!pendingCategory || pendingStatus !== "all" || pendingSort !== "newest"
+
+  function applyModalFilters() {
+    setCategory(pendingCategory)
+    setStatus(pendingStatus)
+    setSort(pendingSort)
+    setFilterModalOpen(false)
+  }
+
+  function clearModalFilters() {
+    setPendingCategory("")
+    setPendingStatus("all")
+    setPendingSort("newest")
+  }
+
+  function clearFilters() {
+    setSearch("")
+    setCategory("")
+    setStatus("all")
+    setSort("newest")
+  }
+
+  // Product list state
   const [allProducts, setAllProducts] = useState<TableProduct[]>(initialProducts)
   const [totalCount, setTotalCount] = useState(initialTotal)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
@@ -45,10 +113,52 @@ export function ProductTable({ initialProducts, total: initialTotal }: ProductTa
   const [dialogOpen, setDialogOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const sentinelRef = useRef<HTMLDivElement>(null)
-  // Refs to avoid stale closures inside IntersectionObserver
-  const stateRef = useRef({ isLoading: false, loaded: initialProducts.length, total: initialTotal })
 
-  useEffect(() => { stateRef.current.total = totalCount }, [totalCount])
+  // Refs to avoid stale closures
+  const stateRef = useRef({ isLoading: false, loaded: initialProducts.length, total: initialTotal })
+  const filtersRef = useRef<DashboardProductFilters>({})
+
+  function buildFilters(): DashboardProductFilters {
+    return {
+      search: debouncedSearch || undefined,
+      categoryId: category || undefined,
+      status: status === "all" ? undefined : status,
+      orderBy: sort === "name_asc" || sort === "name_desc" ? "name" : "createdAt",
+      orderDir: sort === "oldest" || sort === "name_asc" ? "asc" : "desc",
+    }
+  }
+
+  // Reset + load page 1 when filters change
+  useEffect(() => {
+    const filters = buildFilters()
+    filtersRef.current = filters
+    let cancelled = false
+
+    async function load() {
+      stateRef.current.isLoading = true
+      setIsLoadingMore(true)
+      setAllProducts([])
+      setTotalCount(0)
+      stateRef.current.loaded = 0
+      try {
+        const { items, total } = await fetchProductsAction(1, filters)
+        if (cancelled) return
+        setAllProducts(items as TableProduct[])
+        setTotalCount(total)
+        stateRef.current.loaded = items.length
+        stateRef.current.total = total
+      } finally {
+        if (!cancelled) {
+          stateRef.current.isLoading = false
+          setIsLoadingMore(false)
+        }
+      }
+    }
+
+    load()
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, category, status, sort])
 
   const loadMore = useCallback(async () => {
     if (stateRef.current.isLoading) return
@@ -57,7 +167,7 @@ export function ProductTable({ initialProducts, total: initialTotal }: ProductTa
     setIsLoadingMore(true)
     try {
       const nextPage = Math.floor(stateRef.current.loaded / PAGE_SIZE) + 1
-      const { items, total } = await fetchProductsAction(nextPage)
+      const { items, total } = await fetchProductsAction(nextPage, filtersRef.current)
       setAllProducts((prev) => {
         const next = [...prev, ...items] as TableProduct[]
         stateRef.current.loaded = next.length
@@ -142,6 +252,158 @@ export function ProductTable({ initialProducts, total: initialTotal }: ProductTa
 
   return (
     <>
+      {/* Filter bar */}
+      <div className="mb-4 flex items-center gap-2">
+        <Input
+          placeholder="Search products..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="h-9 min-w-0 flex-1 sm:max-w-[200px] sm:flex-none"
+        />
+
+        {/* Mobile: single filter button */}
+        <Dialog open={filterModalOpen} onOpenChange={setFilterModalOpen}>
+          <button
+            onClick={() => setFilterModalOpen(true)}
+            className={cn(
+              "relative flex h-9 shrink-0 items-center gap-1.5 border border-input bg-transparent px-3 text-sm transition-colors hover:bg-accent sm:hidden",
+              activeFilterCount > 0 && "border-foreground"
+            )}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            <span>Filters</span>
+            {activeFilterCount > 0 && (
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-foreground text-[10px] font-bold text-background">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+          <DialogContent className="sm:max-w-xs">
+            <DialogHeader>
+              <DialogTitle>Filters &amp; Sort</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col gap-4 py-2">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Category</label>
+                <Select value={pendingCategory || "all"} onValueChange={(v) => setPendingCategory(!v || v === "all" ? "" : v)}>
+                  <SelectTrigger className="h-10 w-full">
+                    <SelectValue>
+                      {(v: string) => !v || v === "all" ? "All Categories" : flatCategories.find(c => c.slug === v)?.name ?? v}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {flatCategories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.slug}>
+                        <span style={{ paddingLeft: cat.depth * 12 }}>
+                          {cat.depth > 0 ? "↳ " : ""}{cat.name}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Status</label>
+                <Select value={pendingStatus} onValueChange={(v) => setPendingStatus(v as typeof pendingStatus)}>
+                  <SelectTrigger className="h-10 w-full">
+                    <SelectValue>
+                      {(v: string) => v === "published" ? "Published" : v === "unpublished" ? "Draft" : "All Status"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="published">Published</SelectItem>
+                    <SelectItem value="unpublished">Draft</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Sort</label>
+                <Select value={pendingSort} onValueChange={(v) => setPendingSort(v as typeof pendingSort)}>
+                  <SelectTrigger className="h-10 w-full">
+                    <SelectValue>
+                      {(v: string) => ({ newest: "Newest First", oldest: "Oldest First", name_asc: "Name A–Z", name_desc: "Name Z–A" }[v] ?? "Sort")}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                    <SelectItem value="name_asc">Name A–Z</SelectItem>
+                    <SelectItem value="name_desc">Name Z–A</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              {hasPendingFilters && (
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={clearModalFilters}>
+                  <X className="h-3.5 w-3.5" />
+                  Clear filters
+                </Button>
+              )}
+              <Button onClick={applyModalFilters}>Apply</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Desktop: inline dropdowns */}
+        <div className="hidden sm:flex sm:items-center sm:gap-2">
+          <Select value={category || "all"} onValueChange={(v) => setCategory(!v || v === "all" ? "" : v)}>
+            <SelectTrigger className="h-9 w-[180px]">
+              <SelectValue>
+                {(v: string) => !v || v === "all" ? "All Categories" : flatCategories.find(c => c.slug === v)?.name ?? v}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {flatCategories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.slug}>
+                  <span style={{ paddingLeft: cat.depth * 12 }}>
+                    {cat.depth > 0 ? "↳ " : ""}{cat.name}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
+            <SelectTrigger className="h-9 w-[140px]">
+              <SelectValue>
+                {(v: string) => v === "published" ? "Published" : v === "unpublished" ? "Draft" : "All Status"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="published">Published</SelectItem>
+              <SelectItem value="unpublished">Draft</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sort} onValueChange={(v) => setSort(v as typeof sort)}>
+            <SelectTrigger className="h-9 w-[160px]">
+              <SelectValue>
+                {(v: string) => ({ newest: "Newest First", oldest: "Oldest First", name_asc: "Name A–Z", name_desc: "Name Z–A" }[v] ?? "Sort")}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="oldest">Oldest First</SelectItem>
+              <SelectItem value="name_asc">Name A–Z</SelectItem>
+              <SelectItem value="name_desc">Name Z–A</SelectItem>
+            </SelectContent>
+          </Select>
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" className="h-9 gap-1.5 text-xs" onClick={clearFilters}>
+              <X className="h-3.5 w-3.5" />
+              Clear
+            </Button>
+          )}
+        </div>
+
+        <span className="ml-auto hidden text-xs text-muted-foreground sm:block">
+          {totalCount} {totalCount === 1 ? "product" : "products"}
+        </span>
+      </div>
+
       {/* Bulk action bar */}
       {selectedIds.size > 0 && (
         <div className="mb-3 flex items-center gap-3 border-2 border-foreground bg-muted px-4 py-2.5">

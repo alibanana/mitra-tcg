@@ -1,4 +1,4 @@
-export type Role = "ADMIN" | "EDITOR"
+export type Role = "SUPER_ADMIN" | "ADMIN"
 
 export interface SessionUser {
   id: string
