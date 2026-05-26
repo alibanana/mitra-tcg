@@ -45,7 +45,7 @@ export function Header({ categories = [] }: HeaderProps) {
 
   return (
     <header className="site-header sticky top-0 z-50 w-full overflow-visible">
-      <div className="container mx-auto flex h-20 items-center justify-between overflow-visible pl-2 pr-6 lg:px-12">
+      <div className="container mx-auto flex h-24 items-center justify-between overflow-visible pl-2 pr-6 md:h-20 lg:px-12">
         {/* Logo — white version over hero, theme-aware once scrolled past */}
         <Link href="/" className="flex items-center">
           <Image
@@ -121,7 +121,7 @@ export function Header({ categories = [] }: HeaderProps) {
           {/* Theme toggle — icon reflects actual theme, colour forced white over hero */}
           <ThemeToggle
             className={cn(
-              "transition-colors duration-300 h-10 w-10 md:h-9 md:w-9",
+              "transition-colors duration-300 h-11 w-11 md:h-9 md:w-9",
               overHero && "text-white hover:bg-white/20",
             )}
           />

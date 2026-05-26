@@ -29,7 +29,7 @@ export function Hero({ backgroundImages = [], cardImages = [], instagramUrl = si
     <section
       className={cn(
         "site-hero relative overflow-hidden",
-        hasImages && "-mt-20",
+        hasImages && "-mt-24 md:-mt-20",
       )}
     >
       {/* Background carousel */}

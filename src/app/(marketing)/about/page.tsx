@@ -11,9 +11,18 @@ export const metadata: Metadata = buildMetadata({
   path: "/about",
 })
 
+function extractInstagramHandle(url: string): string {
+  try {
+    const pathname = new URL(url).pathname.replace(/^\/|\/$/g, "")
+    if (pathname) return `@${pathname}`
+  } catch {}
+  return "@mitratcg"
+}
+
 export default async function AboutPage() {
   const rawInstagramUrl = await settingsService.getValue("instagram_url")
   const instagramUrl = rawInstagramUrl || siteConfig.instagram
+  const instagramHandle = extractInstagramHandle(instagramUrl)
   return (
     <>
       <div className="border-b-4 border-foreground bg-background py-16">
@@ -24,7 +33,7 @@ export default async function AboutPage() {
           <div className="mt-10 space-y-8 text-base leading-relaxed text-foreground/80">
             <p>
               Mitra TCG is an Indonesian online store specialising in English-language trading cards — primarily
-              One Piece Card Game and Pokémon TCG. We operate via Instagram (@mitra.tcg) and this site,
+              One Piece Card Game and Pokémon TCG. We operate via Instagram ({instagramHandle}) and this site,
               offering raw singles, PSA and BGS graded slabs, sealed booster boxes, and accessories.
             </p>
 
@@ -62,14 +71,14 @@ export default async function AboutPage() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                @mitra.tcg
+                {instagramHandle}
               </a>{" "}
               for new arrivals, restocks, and exclusive drops.
             </p>
           </div>
         </div>
       </div>
-      <CtaSection heading="Ready to Browse?" cta="View the Catalog →" ctaHref="/products" />
+      <CtaSection />
     </>
   )
 }

@@ -38,8 +38,8 @@ interface CtaSectionProps {
 }
 
 export async function CtaSection({
-  heading = "Buy or Sell — Just DM Us",
-  body = "Can't find the card you need? Or have cards you'd like to sell? Hit us up directly on Instagram or WhatsApp and we'll sort it out together.",
+  heading = "Trade or Sell — Just DM Us",
+  body = "Can't find a specific card? Want to trade or sell your collection? Hit us up directly on Instagram or WhatsApp and we'll work something out.",
   cta,
   ctaHref,
 }: CtaSectionProps) {

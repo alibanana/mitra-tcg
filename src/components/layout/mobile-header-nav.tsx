@@ -31,39 +31,40 @@ function CategoryItem({
   const [expanded, setExpanded] = useState(false);
   const hasChildren = category.children.length > 0;
   const pl = DEPTH_PADDING[Math.min(depth, DEPTH_PADDING.length - 1)];
+  const rowClassName = cn(
+    "flex w-full items-center justify-between py-2.5 text-sm transition-colors hover:bg-muted hover:text-foreground",
+    pl,
+    depth === 0
+      ? "font-semibold uppercase tracking-wide text-foreground"
+      : "text-muted-foreground",
+  );
 
   return (
     <div>
-      <div className="flex items-center">
+      {hasChildren ? (
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className={cn(rowClassName, "pr-3")}
+          aria-label={expanded ? `Collapse ${category.name}` : `Expand ${category.name}`}
+        >
+          {category.name}
+          <ChevronDown
+            className={cn(
+              "h-3.5 w-3.5 shrink-0 transition-transform duration-200",
+              expanded && "rotate-180",
+            )}
+          />
+        </button>
+      ) : (
         <Link
           href={`/products?category=${category.slug}`}
           onClick={onNavigate}
-          className={cn(
-            "flex-1 py-2.5 pr-2 text-sm transition-colors hover:bg-muted hover:text-foreground",
-            pl,
-            depth === 0
-              ? "font-semibold uppercase tracking-wide text-foreground"
-              : "text-muted-foreground",
-          )}
+          className={cn(rowClassName, "pr-3")}
         >
           {category.name}
         </Link>
-        {hasChildren && (
-          <button
-            onClick={() => setExpanded((v) => !v)}
-            className="px-3 py-2.5 text-muted-foreground transition-colors hover:text-foreground"
-            aria-label={expanded ? `Collapse ${category.name}` : `Expand ${category.name}`}
-          >
-            <ChevronDown
-              className={cn(
-                "h-3.5 w-3.5 transition-transform duration-200",
-                expanded && "rotate-180",
-              )}
-            />
-          </button>
-        )}
-      </div>
-      {expanded && hasChildren && (
+      )}
+      {expanded && (
         <div>
           {category.children.map((child) => (
             <CategoryItem
@@ -150,11 +151,11 @@ export function MobileHeaderNav({
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         className={cn(
-          "inline-flex items-center justify-center rounded-none border-2 border-foreground p-2 md:hidden transition-colors duration-300",
+          "inline-flex items-center justify-center rounded-none border-2 border-foreground p-2.5 md:hidden transition-colors duration-300",
           className,
         )}
       >
-        <Menu className="h-5 w-5" />
+        <Menu className="h-6 w-6" />
         <span className="sr-only">Toggle menu</span>
       </SheetTrigger>
       <SheetContent
