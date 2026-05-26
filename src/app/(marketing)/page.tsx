@@ -12,9 +12,10 @@ export const metadata: Metadata = {
 }
 
 export default async function HomePage() {
-  const [heroImagesRaw, heroCardsRaw] = await Promise.all([
+  const [heroImagesRaw, heroCardsRaw, rawInstagramUrl] = await Promise.all([
     settingsService.getValue("hero_background_images", "[]").catch(() => "[]"),
     settingsService.getValue("hero_card_images", "[]").catch(() => "[]"),
+    settingsService.getValue("instagram_url").catch(() => ""),
   ])
 
   let heroImages: string[] = []
@@ -35,7 +36,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <Hero backgroundImages={heroImages} cardImages={heroCards} />
+      <Hero backgroundImages={heroImages} cardImages={heroCards} instagramUrl={rawInstagramUrl || undefined} />
       <InstagramFeed />
       <CtaSection />
     </>

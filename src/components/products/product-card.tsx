@@ -80,15 +80,16 @@ export function ProductCard({ product, priority = false, whatsappUrl }: ProductC
                 e.stopPropagation()
                 window.open(inquiryUrl, "_blank", "noopener,noreferrer")
               }}
-              className="group/msg cursor-pointer flex items-center gap-1.5 text-sm font-semibold text-primary transition-opacity duration-150 hover:opacity-70"
+              className="group/msg flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-primary px-3 py-2 text-xs font-semibold text-primary transition-colors duration-150 hover:bg-primary hover:text-primary-foreground"
             >
               <MessageCircle className="h-3.5 w-3.5 transition-transform duration-150 group-hover/msg:scale-110" />
-              Message us
+              <span className="sm:hidden">DM for price</span>
+              <span className="hidden sm:inline">Message for pricing</span>
             </button>
           ) : (
-            <span className="flex items-center gap-1.5 text-sm font-semibold text-primary">
+            <span className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold text-muted-foreground">
               <MessageCircle className="h-3.5 w-3.5" />
-              {product.sold ? "Sold Out" : "Message us"}
+              {product.sold ? "Sold Out" : "Message for pricing"}
             </span>
           )}
         </div>

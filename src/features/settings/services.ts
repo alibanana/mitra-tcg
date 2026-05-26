@@ -23,4 +23,12 @@ export const settingsService = {
       data.settings.map((s) => settingsRepository.upsert(s.key, s.value)),
     )
   },
+
+  async getSocialLinks() {
+    const [instagram, whatsapp] = await Promise.all([
+      settingsRepository.findByKey("instagram_url").then((s) => s?.value ?? ""),
+      settingsRepository.findByKey("whatsapp_url").then((s) => s?.value ?? ""),
+    ])
+    return { instagram, whatsapp }
+  },
 }

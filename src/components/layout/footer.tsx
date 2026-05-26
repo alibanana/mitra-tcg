@@ -7,11 +7,13 @@ import { settingsService } from "@/features/settings/services"
 import { normalizeUrl } from "@/lib/utils"
 
 export async function Footer() {
-  const [categories, rawWhatsappUrl] = await Promise.all([
+  const [categories, rawWhatsappUrl, rawInstagramUrl] = await Promise.all([
     categoriesService.getCategoryTree(),
     settingsService.getValue("whatsapp_url"),
+    settingsService.getValue("instagram_url"),
   ])
   const whatsappUrl = rawWhatsappUrl ? normalizeUrl(rawWhatsappUrl) : null
+  const instagramUrl = rawInstagramUrl || siteConfig.instagram
   return (
     <footer className="border-t border-border bg-background">
       <div className="container mx-auto px-6 lg:px-12">
@@ -38,7 +40,7 @@ export async function Footer() {
             </p>
             <div className="mt-5 flex items-center gap-3">
               <a
-                href={siteConfig.instagram}
+                href={instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs font-semibold transition-colors hover:border-foreground"

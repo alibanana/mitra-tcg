@@ -9,9 +9,10 @@ import { cn } from "@/lib/utils"
 interface HeroProps {
   backgroundImages?: string[]
   cardImages?: string[]
+  instagramUrl?: string
 }
 
-export function Hero({ backgroundImages = [], cardImages = [] }: HeroProps) {
+export function Hero({ backgroundImages = [], cardImages = [], instagramUrl = siteConfig.instagram }: HeroProps) {
   const hasCards = cardImages.length > 0
   const [activeIndex, setActiveIndex] = useState(0)
   const hasImages = backgroundImages.length > 0
@@ -96,7 +97,7 @@ export function Hero({ backgroundImages = [], cardImages = [] }: HeroProps) {
               Browse Collection →
             </Link>
             <a
-              href={siteConfig.instagram}
+              href={instagramUrl}
               target="_blank"
               rel="noopener noreferrer"
               className={cn(

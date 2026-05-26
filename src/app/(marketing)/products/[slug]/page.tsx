@@ -34,15 +34,17 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
 
   if (!product || !product.published) notFound()
 
-  const [related, rawWhatsappUrl] = await Promise.all([
+  const [related, rawWhatsappUrl, rawInstagramUrl] = await Promise.all([
     productsService.getRelatedProducts(product.id, product.categoryId).catch(() => []),
     settingsService.getValue("whatsapp_url"),
+    settingsService.getValue("instagram_url"),
   ])
 
   const whatsappUrl = rawWhatsappUrl ? normalizeUrl(rawWhatsappUrl) : null
+  const instagramUrl = rawInstagramUrl || siteConfig.instagram
   const inquiryUrl = whatsappUrl
     ? `${whatsappUrl}?text=Hi%2C%20I%27m%20interested%20in%20${encodeURIComponent(product.name)}`
-    : siteConfig.instagram
+    : instagramUrl
 
   return (
     <>

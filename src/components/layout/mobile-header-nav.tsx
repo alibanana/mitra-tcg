@@ -15,6 +15,71 @@ interface MobileHeaderNavProps {
   categories?: CategoryWithChildren[];
 }
 
+const DEPTH_PADDING = ["px-6", "pl-9", "pl-12", "pl-14"] as const;
+
+function CategoryItem({
+  category,
+  depth,
+  onNavigate,
+  pathname,
+}: {
+  category: CategoryWithChildren;
+  depth: number;
+  onNavigate: () => void;
+  pathname: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const hasChildren = category.children.length > 0;
+  const pl = DEPTH_PADDING[Math.min(depth, DEPTH_PADDING.length - 1)];
+
+  return (
+    <div>
+      <div className="flex items-center">
+        <Link
+          href={`/products?category=${category.slug}`}
+          onClick={onNavigate}
+          className={cn(
+            "flex-1 py-2.5 pr-2 text-sm transition-colors hover:bg-muted hover:text-foreground",
+            pl,
+            depth === 0
+              ? "font-semibold uppercase tracking-wide text-foreground"
+              : "text-muted-foreground",
+          )}
+        >
+          {category.name}
+        </Link>
+        {hasChildren && (
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            className="px-3 py-2.5 text-muted-foreground transition-colors hover:text-foreground"
+            aria-label={expanded ? `Collapse ${category.name}` : `Expand ${category.name}`}
+          >
+            <ChevronDown
+              className={cn(
+                "h-3.5 w-3.5 transition-transform duration-200",
+                expanded && "rotate-180",
+              )}
+            />
+          </button>
+        )}
+      </div>
+      {expanded && hasChildren && (
+        <div>
+          {category.children.map((child) => (
+            <CategoryItem
+              key={child.id}
+              category={child}
+              depth={depth + 1}
+              onNavigate={onNavigate}
+              pathname={pathname}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ProductsMobileItem({
   categories,
   pathname,
@@ -54,44 +119,19 @@ function ProductsMobileItem({
             onClick={onNavigate}
             className={cn(
               "block px-6 py-2.5 text-sm font-semibold uppercase tracking-wide transition-colors hover:bg-muted hover:text-foreground",
-              pathname === "/products"
-                ? "text-primary"
-                : "text-muted-foreground",
+              pathname === "/products" ? "text-primary" : "text-muted-foreground",
             )}
           >
             All Products
           </Link>
           {categories.map((cat) => (
-            <div key={cat.id}>
-              <Link
-                href={`/products?category=${cat.slug}`}
-                onClick={onNavigate}
-                className="block px-6 py-2.5 text-sm font-semibold uppercase tracking-wide transition-colors hover:bg-muted hover:text-foreground"
-              >
-                {cat.name}
-              </Link>
-              {cat.children?.map((child) => (
-                <div key={child.id}>
-                  <Link
-                    href={`/products?category=${child.slug}`}
-                    onClick={onNavigate}
-                    className="block pl-9 pr-6 py-2 text-sm tracking-wide text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                  >
-                    {child.name}
-                  </Link>
-                  {child.children?.map((grandchild) => (
-                    <Link
-                      key={grandchild.id}
-                      href={`/products?category=${grandchild.slug}`}
-                      onClick={onNavigate}
-                      className="block pl-12 pr-6 py-2 text-sm tracking-wide text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
-                    >
-                      {grandchild.name}
-                    </Link>
-                  ))}
-                </div>
-              ))}
-            </div>
+            <CategoryItem
+              key={cat.id}
+              category={cat}
+              depth={0}
+              onNavigate={onNavigate}
+              pathname={pathname}
+            />
           ))}
         </div>
       )}

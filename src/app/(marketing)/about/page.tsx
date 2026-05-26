@@ -1,5 +1,6 @@
 import { CtaSection } from "@/components/marketing/cta-section"
 import { siteConfig } from "@/config/site"
+import { settingsService } from "@/features/settings/services"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -7,7 +8,9 @@ export const metadata: Metadata = {
   description: "Learn more about Mitra TCG — your trusted source for English One Piece and Pokémon cards in Indonesia.",
 }
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const rawInstagramUrl = await settingsService.getValue("instagram_url")
+  const instagramUrl = rawInstagramUrl || siteConfig.instagram
   return (
     <>
       <div className="border-b-4 border-foreground bg-background py-16">
@@ -51,7 +54,7 @@ export default function AboutPage() {
             <p>
               Follow us on Instagram{" "}
               <a
-                href={siteConfig.instagram}
+                href={instagramUrl}
                 className="font-bold text-primary underline underline-offset-4"
                 target="_blank"
                 rel="noopener noreferrer"

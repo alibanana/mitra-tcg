@@ -5,8 +5,12 @@ import { ContactForm } from "./contact-form"
 import { normalizeUrl } from "@/lib/utils"
 
 export default async function ContactPage() {
-  const rawWhatsappUrl = await settingsService.getValue("whatsapp_url")
+  const [rawWhatsappUrl, rawInstagramUrl] = await Promise.all([
+    settingsService.getValue("whatsapp_url"),
+    settingsService.getValue("instagram_url"),
+  ])
   const whatsappUrl = rawWhatsappUrl ? normalizeUrl(rawWhatsappUrl) : null
+  const instagramUrl = rawInstagramUrl || siteConfig.instagram
 
   return (
     <div className="border-b-4 border-foreground bg-background py-16">
@@ -23,7 +27,7 @@ export default async function ContactPage() {
 
             <div className="mt-8 space-y-4">
               <a
-                href={siteConfig.instagram}
+                href={instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-4 border-2 border-foreground p-4 shadow-[4px_4px_0_var(--foreground)] transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_var(--foreground)]"

@@ -79,12 +79,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           )}
         </div>
       </div>
-      <CtaSection
-        heading="Can&apos;t Find What You&apos;re Looking For?"
-        body="DM us on Instagram and we&apos;ll help you source the specific card you need."
-        cta="Contact via Instagram →"
-        ctaHref="https://instagram.com/mitra.tcg"
-      />
+      <CtaSection />
     </>
   )
 }
