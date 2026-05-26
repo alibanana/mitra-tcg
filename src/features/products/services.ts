@@ -83,4 +83,9 @@ export const productsService = {
   async getSoldCount() {
     return productsRepository.count({ sold: true })
   },
+
+  async getAllPublishedForSitemap() {
+    const result = await productsRepository.findMany({ published: true, limit: 1000 })
+    return result.items.map((p) => ({ slug: p.slug, updatedAt: p.updatedAt }))
+  },
 }

@@ -18,11 +18,32 @@ const spaceGrotesk = Space_Grotesk({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.url),
   title: {
     default: siteConfig.name,
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.description,
+  keywords: [
+    "One Piece cards",
+    "Pokémon cards",
+    "TCG Indonesia",
+    "trading cards Indonesia",
+    "PSA graded cards",
+    "BGS graded cards",
+    "raw singles",
+    "sealed products",
+    "Mitra TCG",
+  ],
+  robots: { index: true, follow: true },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName: siteConfig.name,
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 }
 
 export default function RootLayout({

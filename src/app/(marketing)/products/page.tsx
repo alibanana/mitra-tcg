@@ -8,10 +8,9 @@ import { ProductFilters } from "@/components/products/product-filters"
 import { CtaSection } from "@/components/marketing/cta-section"
 import Link from "next/link"
 import { normalizeUrl } from "@/lib/utils"
+import { generateMetadata as buildMetadata } from "@/lib/seo"
 import type { Metadata } from "next"
 import type { Product } from "@/features/products/types"
-
-export const metadata: Metadata = { title: "Products" }
 
 const VALID_SORTS = ["newest", "oldest", "name_asc", "name_desc"] as const
 type SortValue = typeof VALID_SORTS[number]
@@ -22,6 +21,19 @@ interface ProductsPageProps {
     search?: string
     sort?: string
   }>
+}
+
+export async function generateMetadata({ searchParams }: ProductsPageProps): Promise<Metadata> {
+  const raw = await searchParams
+  if (raw.category || raw.search) {
+    return { title: "Products", robots: { index: false, follow: true } }
+  }
+  return buildMetadata({
+    title: "Products — One Piece & Pokémon TCG",
+    description:
+      "Browse our full catalog of English One Piece and Pokémon trading cards — raw singles, PSA graded slabs, and sealed products. Shipped across Indonesia.",
+    path: "/products",
+  })
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {

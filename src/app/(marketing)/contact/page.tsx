@@ -1,8 +1,17 @@
 import { siteConfig } from "@/config/site"
 import { settingsService } from "@/features/settings/services"
+import { generateMetadata as buildMetadata } from "@/lib/seo"
 import { ExternalLink } from "lucide-react"
 import { ContactForm } from "./contact-form"
 import { normalizeUrl } from "@/lib/utils"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = buildMetadata({
+  title: "Contact",
+  description:
+    "Get in touch with Mitra TCG. Reach us on Instagram or WhatsApp for card inquiries, pricing, and buying or selling trading cards.",
+  path: "/contact",
+})
 
 export default async function ContactPage() {
   const [rawWhatsappUrl, rawInstagramUrl] = await Promise.all([

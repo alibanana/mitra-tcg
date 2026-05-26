@@ -1,12 +1,15 @@
 import { CtaSection } from "@/components/marketing/cta-section"
 import { siteConfig } from "@/config/site"
 import { settingsService } from "@/features/settings/services"
+import { generateMetadata as buildMetadata } from "@/lib/seo"
 import type { Metadata } from "next"
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "About",
-  description: "Learn more about Mitra TCG — your trusted source for English One Piece and Pokémon cards in Indonesia.",
-}
+  description:
+    "Learn more about Mitra TCG — your trusted source for English One Piece and Pokémon cards in Indonesia. 100% authentic raw and graded singles.",
+  path: "/about",
+})
 
 export default async function AboutPage() {
   const rawInstagramUrl = await settingsService.getValue("instagram_url")

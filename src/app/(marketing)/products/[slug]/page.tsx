@@ -22,9 +22,27 @@ export async function generateMetadata({ params }: ProductDetailPageProps): Prom
   const { slug } = await params
   const product = await productsService.getProductBySlug(slug).catch(() => null)
   if (!product) return {}
+  const description =
+    product.description ||
+    `${product.name} — available at Mitra TCG. English TCG singles shipped across Indonesia.`
   return {
     title: product.name,
-    description: product.description,
+    description,
+    alternates: { canonical: `${siteConfig.url}/products/${slug}` },
+    openGraph: {
+      title: product.name,
+      description,
+      url: `${siteConfig.url}/products/${slug}`,
+      siteName: siteConfig.name,
+      images: product.images[0] ? [{ url: product.images[0], alt: product.name }] : [],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.name,
+      description,
+      images: product.images[0] ? [product.images[0]] : [],
+    },
   }
 }
 
@@ -46,8 +64,33 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
     ? `${whatsappUrl}?text=Hi%2C%20I%27m%20interested%20in%20${encodeURIComponent(product.name)}`
     : instagramUrl
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description:
+      product.description ||
+      `${product.name} — available at Mitra TCG. English TCG singles shipped across Indonesia.`,
+    image: product.images,
+    url: `${siteConfig.url}/products/${product.slug}`,
+    brand: { "@type": "Brand", name: "Mitra TCG" },
+    offers: {
+      "@type": "Offer",
+      seller: { "@type": "Organization", name: "Mitra TCG" },
+      availability: product.sold
+        ? "https://schema.org/SoldOut"
+        : "https://schema.org/InStock",
+      itemCondition: "https://schema.org/UsedCondition",
+      url: `${siteConfig.url}/products/${product.slug}`,
+    },
+  }
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="border-b border-border bg-background py-12">
         <div className="container mx-auto px-4 lg:px-8">
           {/* Breadcrumb */}
